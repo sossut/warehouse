@@ -66,6 +66,21 @@ const palletPost = async (
       throw new CustomError(messages, 400);
     }
     const id = await postPallet();
+    const products = req.body.products;
+    if (products) {
+      for (const product of products) {
+        let quantity = product.quantity;
+        if (!quantity) {
+          quantity = 0;
+        }
+        const pp: PalletProduct = {
+          palletId: id,
+          productId: product.productId,
+          quantity: quantity
+        };
+        await postPalletProduct(pp);
+      }
+    }
     if (id) {
       const message: MessageResponse = {
         message: 'Pallet created',

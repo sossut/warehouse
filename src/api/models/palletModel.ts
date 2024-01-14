@@ -6,26 +6,60 @@ import { GetPallet, PutPallet, Pallet } from '../../interfaces/Pallet';
 
 const getAllPallets = async (): Promise<Pallet[]> => {
   const [rows] = await promisePool.execute<GetPallet[]>(
-    `SELECT *
-    FROM pallets`
+    `SELECT 
+      JSON_OBJECT('id', pallets.id, 'createdAt', pallets.createdAt, 'updatedAt', pallets.updatedAt) AS pallet,
+      CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+          'id', products.id,
+          'name', products.name,
+          'code', products.code,
+          'weight', products.weight,
+          'quantity', palletProducts.quantity
+        )), ']')
+       AS products
+    FROM pallets
+    JOIN palletProducts ON pallets.id = palletProducts.palletId
+    JOIN products ON palletProducts.productId = products.id
+    GROUP BY pallets.id`
   );
   if (rows.length === 0) {
     throw new CustomError('No pallets found', 404);
   }
-  return rows;
+  const pallets = rows.map((row) => ({
+    ...row,
+    pallet: JSON.parse(row.pallet.toString() || '{}'),
+    products: JSON.parse(row.products?.toString() || '{}')
+  }));
+  return pallets;
 };
 
 const getPallet = async (id: string): Promise<Pallet> => {
   const [rows] = await promisePool.execute<GetPallet[]>(
-    `SELECT *
+    `SELECT 
+      JSON_OBJECT('id', pallets.id, 'createdAt', pallets.createdAt, 'updatedAt', pallets.updatedAt) AS pallet,
+      CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+          'id', products.id,
+          'name', products.name,
+          'code', products.code,
+          'weight', products.weight,
+          'quantity', palletProducts.quantity
+        )), ']')
+       AS products
     FROM pallets
-    WHERE id = ?`,
+    JOIN palletProducts ON pallets.id = palletProducts.palletId
+    JOIN products ON palletProducts.productId = products.id
+    WHERE pallets.id = ?
+    `,
     [id]
   );
   if (rows.length === 0) {
     throw new CustomError('Pallet not found', 404);
   }
-  return rows[0];
+  const pallets = rows.map((row) => ({
+    ...row,
+    pallet: JSON.parse(row.pallet.toString() || '{}'),
+    products: JSON.parse(row.products?.toString() || '{}')
+  }));
+  return pallets[0];
 };
 
 const postPallet = async () => {
