@@ -18,6 +18,7 @@ router
   .post(
     body('departureAt').isDate().optional().escape(),
     body('transportOptionId').isNumeric().optional().escape(),
+    body('clientId').isNumeric().optional().escape(),
     passport.authenticate('jwt', { session: false }),
     docketPost
   );

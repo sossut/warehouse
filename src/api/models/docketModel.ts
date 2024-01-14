@@ -13,7 +13,12 @@ import {
 const getAllDockets = async (): Promise<Docket[]> => {
   const [rows] = await promisePool.execute<GetDocket[]>(
     `SELECT 
-      JSON_OBJECT('id', dockets.id, 'departureAt', dockets.departureAt, 'transportOptionId', dockets.transportOptionId, 'userId', dockets.userId) AS docket,
+      JSON_OBJECT(
+        'id', dockets.id, 
+        'departureAt', dockets.departureAt, 
+        'transportOptionId', 
+        dockets.transportOptionId, 
+        'userId', dockets.userId) AS docket,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
           'name', products.name,
@@ -21,11 +26,15 @@ const getAllDockets = async (): Promise<Docket[]> => {
           'weight', products.weight,
           'quantity', docketProducts.productQuantity,
           'quantityOptionId', docketProducts.quantityOptionId
-        )), ']')
-       AS products
+        )), ']') AS products,
+      JSON_OBJECT(
+        'id', clients.id,
+        'name', clients.name
+      ) AS client,
     FROM dockets
     JOIN docketProducts ON dockets.id = docketProducts.docketId
     JOIN products ON docketProducts.productId = products.id
+    JOIN clients ON dockets.clientId = clients.id
     GROUP BY dockets.id`
   );
   if (rows.length === 0) {
@@ -34,7 +43,8 @@ const getAllDockets = async (): Promise<Docket[]> => {
   const dockets = rows.map((row) => ({
     ...row,
     docket: JSON.parse(row.docket.toString() || '{}'),
-    products: JSON.parse(row.products?.toString() || '{}')
+    products: JSON.parse(row.products?.toString() || '{}'),
+    client: JSON.parse(row.client?.toString() || '{}')
   }));
   return dockets;
 };
@@ -42,7 +52,12 @@ const getAllDockets = async (): Promise<Docket[]> => {
 const getDocket = async (id: string): Promise<Docket> => {
   const [rows] = await promisePool.execute<GetDocket[]>(
     `SELECT 
-      JSON_OBJECT('id', dockets.id, 'departureAt', dockets.departureAt, 'transportOptionId', dockets.transportOptionId, 'userId', dockets.userId) AS docket,
+      JSON_OBJECT(
+        'id', dockets.id, 
+        'departureAt', dockets.departureAt, 
+        'transportOptionId', 
+        dockets.transportOptionId, 
+        'userId', dockets.userId) AS docket,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
           'name', products.name,
@@ -50,11 +65,15 @@ const getDocket = async (id: string): Promise<Docket> => {
           'weight', products.weight,
           'quantity', docketProducts.productQuantity,
           'quantityOptionId', docketProducts.quantityOptionId
-        )), ']')
-       AS products
+        )), ']') AS products,
+      JSON_OBJECT(
+        'id', clients.id,
+        'name', clients.name
+      ) AS client,
     FROM dockets
     JOIN docketProducts ON dockets.id = docketProducts.docketId
     JOIN products ON docketProducts.productId = products.id
+    JOIN clients ON dockets.clientId = clients.id
     WHERE dockets.id = ?`,
     [id]
   );
@@ -64,7 +83,8 @@ const getDocket = async (id: string): Promise<Docket> => {
   const dockets = rows.map((row) => ({
     ...row,
     docket: JSON.parse(row.docket.toString() || '{}'),
-    products: JSON.parse(row.products?.toString() || '{}')
+    products: JSON.parse(row.products?.toString() || '{}'),
+    client: JSON.parse(row.client?.toString() || '{}')
   }));
   return dockets[0];
 };

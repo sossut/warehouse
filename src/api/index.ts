@@ -18,7 +18,7 @@ const router = express.Router();
 router.get<{}, MessageResponse>('/', (req, res) => {
   res.json({
     message:
-      'api/v1/ - user, product, auth, row, gap, spot, pallet, quantity-option, transport-option, docket'
+      'api/v1/ - user, product, auth, row, gap, spot, pallet, quantity-option, transport-option, docket, client'
   });
 });
 
