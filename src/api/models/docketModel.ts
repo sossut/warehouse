@@ -12,39 +12,71 @@ import {
 
 const getAllDockets = async (): Promise<Docket[]> => {
   const [rows] = await promisePool.execute<GetDocket[]>(
-    `SELECT *
-    FROM dockets`
+    `SELECT 
+      JSON_OBJECT('id', dockets.id, 'departureAt', dockets.departureAt, 'transportOptionId', dockets.transportOptionId, 'userId', dockets.userId) AS docket,
+      CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+          'id', products.id,
+          'name', products.name,
+          'code', products.code,
+          'weight', products.weight,
+          'quantity', docketProducts.productQuantity,
+          'quantityOptionId', docketProducts.quantityOptionId
+        )), ']')
+       AS products
+    FROM dockets
+    JOIN docketProducts ON dockets.id = docketProducts.docketId
+    JOIN products ON docketProducts.productId = products.id
+    GROUP BY dockets.id`
   );
   if (rows.length === 0) {
     throw new CustomError('No dockets found', 404);
   }
-  return rows;
+  const dockets = rows.map((row) => ({
+    ...row,
+    docket: JSON.parse(row.docket.toString() || '{}'),
+    products: JSON.parse(row.products?.toString() || '{}')
+  }));
+  return dockets;
 };
 
 const getDocket = async (id: string): Promise<Docket> => {
   const [rows] = await promisePool.execute<GetDocket[]>(
-    `SELECT *
+    `SELECT 
+      JSON_OBJECT('id', dockets.id, 'departureAt', dockets.departureAt, 'transportOptionId', dockets.transportOptionId, 'userId', dockets.userId) AS docket,
+      CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+          'id', products.id,
+          'name', products.name,
+          'code', products.code,
+          'weight', products.weight,
+          'quantity', docketProducts.productQuantity,
+          'quantityOptionId', docketProducts.quantityOptionId
+        )), ']')
+       AS products
     FROM dockets
-    WHERE id = ?`,
+    JOIN docketProducts ON dockets.id = docketProducts.docketId
+    JOIN products ON docketProducts.productId = products.id
+    WHERE dockets.id = ?`,
     [id]
   );
   if (rows.length === 0) {
     throw new CustomError('Docket not found', 404);
   }
-  return rows[0];
+  const dockets = rows.map((row) => ({
+    ...row,
+    docket: JSON.parse(row.docket.toString() || '{}'),
+    products: JSON.parse(row.products?.toString() || '{}')
+  }));
+  return dockets[0];
 };
 
 const postDocket = async (docket: PostDocket) => {
-  const [headers] = await promisePool.execute<ResultSetHeader>(
-    `INSERT INTO dockets (docketNumber, departureAt, transportOptionId, userId )
-    VALUES (?, ?, ?, ?)`,
-    [
-      docket.docketNumber,
-      docket.departureAt,
-      docket.transportOptionId,
-      docket.userId
-    ]
+  const sql = promisePool.format(
+    `INSERT INTO dockets (departureAt, transportOptionId, userId)
+    VALUES (?, ?, ?)`,
+    [docket.departureAt, docket.transportOptionId, docket.userId]
   );
+  console.log(sql);
+  const [headers] = await promisePool.execute<ResultSetHeader>(sql);
   if (headers.affectedRows === 0) {
     throw new CustomError('Docket not created', 400);
   }

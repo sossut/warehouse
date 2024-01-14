@@ -13,6 +13,12 @@ import { Request, Response, NextFunction } from 'express';
 import { PostDocket, PutDocket } from '../../interfaces/Docket';
 import CustomError from '../../classes/CustomError';
 import MessageResponse from '../../interfaces/MessageResponse';
+import { User } from '../../interfaces/User';
+import { DocketProduct } from '../../interfaces/DocketProduct';
+import {
+  deleteDocketProductByDocketId,
+  postDocketProduct
+} from '../models/docketProductModel';
 
 const docketListGet = async (
   req: Request,
@@ -59,10 +65,31 @@ const docketPost = async (
         .join(', ');
       throw new CustomError(messages, 400);
     }
-    const docket = await postDocket(req.body);
+
+    req.body.userId = (req.user as User).id;
+
+    const id = await postDocket(req.body);
+    const products = req.body.products;
+    if (id) {
+      if (products) {
+        for (const product of products) {
+          let quantity = product.productQuantity;
+          if (!quantity) {
+            quantity = 0;
+          }
+          const dp: DocketProduct = {
+            docketId: id,
+            productId: product.productId,
+            productQuantity: quantity,
+            quantityOptionId: product.quantityOptionId
+          };
+          await postDocketProduct(dp);
+        }
+      }
+    }
     const message: MessageResponse = {
       message: 'Docket created',
-      id: docket
+      id: id
     };
     res.json(message);
   } catch (error) {
@@ -89,6 +116,29 @@ const docketPut = async (
       console.log(messages);
       throw new CustomError(messages, 400);
     }
+    const products = req.body.products;
+
+    if (products) {
+      try {
+        await deleteDocketProductByDocketId(parseInt(req.params.id));
+      } catch (error) {}
+
+      for (const product of products) {
+        let quantity = product.productQuantity;
+        if (!quantity) {
+          quantity = 0;
+        }
+        const dp: DocketProduct = {
+          docketId: parseInt(req.params.id),
+          productId: product.productId,
+          productQuantity: quantity,
+          quantityOptionId: product.quantityOptionId
+        };
+        await postDocketProduct(dp);
+      }
+    }
+    delete req.body.products;
+    req.body.updatedAt = new Date();
     const result = await putDocket(req.body, parseInt(req.params.id));
     if (!result) {
       throw new CustomError('Docket not updated', 400);

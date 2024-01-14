@@ -11,6 +11,7 @@ import palletRoute from './routes/palletRoute';
 import quantityOptionRoute from './routes/quantityOptionRoute';
 import transportOptionRoute from './routes/transportOptionRoute';
 import docketRoute from './routes/docketRoute';
+import clientRoute from './routes/clientRoute';
 
 const router = express.Router();
 
@@ -31,5 +32,6 @@ router.use('/pallet', palletRoute);
 router.use('/quantity-option', quantityOptionRoute);
 router.use('/transport-option', transportOptionRoute);
 router.use('/docket', docketRoute);
+router.use('/client', clientRoute);
 
 export default router;

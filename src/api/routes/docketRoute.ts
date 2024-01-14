@@ -16,7 +16,6 @@ router
   .route('/')
   .get(passport.authenticate('jwt', { session: false }), docketListGet)
   .post(
-    body('docketNumber').isNumeric().notEmpty().escape(),
     body('departureAt').isDate().optional().escape(),
     body('transportOptionId').isNumeric().optional().escape(),
     passport.authenticate('jwt', { session: false }),

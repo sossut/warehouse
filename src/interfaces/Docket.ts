@@ -5,12 +5,11 @@ import { DocketProduct } from './DocketProduct';
 
 interface Docket {
   id: number;
-  docketNumber: string;
   createdAt: Date;
   updatedAt: Date;
   userId: number | User;
   status: 'open' | 'closed';
-  departureAt: Date;
+  departureAt: Date | null;
   transportOptionId: number | TransportOption;
   products?: DocketProduct[];
 }

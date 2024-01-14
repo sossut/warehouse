@@ -34,10 +34,25 @@ const getDocketProduct = async (id: string): Promise<DocketProduct> => {
   return rows[0];
 };
 
+const getDocketProductsIdsByDocketId = async (
+  id: number
+): Promise<DocketProduct[]> => {
+  const [rows] = await promisePool.execute<GetDocketProduct[]>(
+    `SELECT id
+    FROM DocketProducts
+    WHERE docketId = ?`,
+    [id]
+  );
+  if (rows.length === 0) {
+    throw new CustomError('DocketProduct not found', 404);
+  }
+  return rows;
+};
+
 const postDocketProduct = async (docketProduct: PostDocketProduct) => {
-  const [headers] = await promisePool.execute<ResultSetHeader>(
+  const sql = promisePool.format(
     `INSERT INTO DocketProducts (productId, docketId, productQuantity, quantityOptionId)
-    VALUES (?, ?, ?, ?, ?)`,
+    VALUES (?, ?, ?, ?)`,
     [
       docketProduct.productId,
       docketProduct.docketId,
@@ -45,6 +60,8 @@ const postDocketProduct = async (docketProduct: PostDocketProduct) => {
       docketProduct.quantityOptionId
     ]
   );
+  console.log(sql);
+  const [headers] = await promisePool.execute<ResultSetHeader>(sql);
   if (headers.affectedRows === 0) {
     throw new CustomError('DocketProduct not created', 400);
   }
@@ -79,10 +96,28 @@ const deleteDocketProduct = async (id: number): Promise<boolean> => {
   return true;
 };
 
+const deleteDocketProductByDocketId = async (
+  docketId: number
+): Promise<boolean> => {
+  const sql = promisePool.format(
+    'DELETE FROM DocketProducts WHERE docketId = ?;',
+    [docketId]
+  );
+  console.log(sql);
+  const [headers] = await promisePool.query<ResultSetHeader>(sql);
+  if (headers.affectedRows === 0) {
+    throw new CustomError('DocketProduct not found', 404);
+  }
+
+  return true;
+};
+
 export {
   getAllDocketProducts,
   getDocketProduct,
+  getDocketProductsIdsByDocketId,
   postDocketProduct,
   putDocketProduct,
-  deleteDocketProduct
+  deleteDocketProduct,
+  deleteDocketProductByDocketId
 };

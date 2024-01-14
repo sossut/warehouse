@@ -15,7 +15,6 @@ import CustomError from '../../classes/CustomError';
 import MessageResponse from '../../interfaces/MessageResponse';
 import {
   deletePalletProductByPalletId,
-  getPalletProductsIdsByPalletId,
   postPalletProduct
 } from '../models/palletProductModel';
 import { PalletProduct } from '../../interfaces/PalletProduct';
@@ -114,17 +113,9 @@ const palletPut = async (
     }
     const products = req.body.products;
     if (products) {
-      let palletProducts: PalletProduct[];
       try {
-        palletProducts =
-          (await getPalletProductsIdsByPalletId(parseInt(req.params.id))) || [];
-      } catch (error) {
-        palletProducts = [];
-      }
-      const result = deletePalletProductByPalletId(parseInt(req.params.id));
-      if (!result) {
-        return;
-      }
+        await deletePalletProductByPalletId(parseInt(req.params.id));
+      } catch (error) {}
 
       for (const product of products) {
         let quantity = product.quantity;
@@ -136,10 +127,7 @@ const palletPut = async (
           productId: product.productId,
           quantity: quantity
         };
-        const pp1 = await postPalletProduct(pp);
-        if (pp1) {
-          palletProducts.push(pp);
-        }
+        await postPalletProduct(pp);
       }
     }
     delete req.body.products;

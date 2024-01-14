@@ -16,7 +16,7 @@ router
   .route('/')
   .get(passport.authenticate('jwt', { session: false }), quantityOptionListGet)
   .post(
-    body('quantityOption').isNumeric().notEmpty().escape(),
+    body('quantityOption').isString().notEmpty().escape(),
     passport.authenticate('jwt', { session: false }),
     quantityOptionPost
   );

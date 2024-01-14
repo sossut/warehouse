@@ -1,50 +1,48 @@
 import { validationResult } from 'express-validator';
 
 import {
-  getAllQuantityOptions,
-  getQuantityOption,
-  postQuantityOption,
-  putQuantityOption,
-  deleteQuantityOption
-} from '../models/quantityOptionModel';
+  getAllClients,
+  getClient,
+  postClient,
+  putClient,
+  deleteClient
+} from '../models/clientModel';
 
 import { Request, Response, NextFunction } from 'express';
 
-import {
-  QuantityOption,
-  PostQuantityOption
-} from '../../interfaces/QuantityOption';
+import { PutClient, PostClient } from '../../interfaces/Client';
+
 import CustomError from '../../classes/CustomError';
 import MessageResponse from '../../interfaces/MessageResponse';
 
-const quantityOptionListGet = async (
+const clientListGet = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const quantityOptions = await getAllQuantityOptions();
-    res.json(quantityOptions);
+    const clients = await getAllClients();
+    res.json(clients);
   } catch (error) {
     next(error);
   }
 };
 
-const quantityOptionGet = async (
+const clientGet = async (
   req: Request<{ id: string }, {}, {}>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const quantityOption = await getQuantityOption(req.params.id);
-    res.json(quantityOption);
+    const client = await getClient(req.params.id);
+    res.json(client);
   } catch (error) {
     next(error);
   }
 };
 
-const quantityOptionPost = async (
-  req: Request<{}, {}, PostQuantityOption>,
+const clientPost = async (
+  req: Request<{}, {}, PostClient>,
   res: Response,
   next: NextFunction
 ) => {
@@ -62,21 +60,19 @@ const quantityOptionPost = async (
 
       throw new CustomError(messages, 400);
     }
-    const id = await postQuantityOption(req.body);
-    if (id) {
-      const message: MessageResponse = {
-        message: 'QuantityOption created',
-        id: id
-      };
-      res.json(message);
-    }
+    const clientId = await postClient(req.body);
+    const message: MessageResponse = {
+      message: 'Client created',
+      id: clientId
+    };
+    res.status(201).json(message);
   } catch (error) {
     next(error);
   }
 };
 
-const quantityOptionPut = async (
-  req: Request<{ id: string }, {}, QuantityOption>,
+const clientPut = async (
+  req: Request<{ id: string }, {}, PutClient>,
   res: Response,
   next: NextFunction
 ) => {
@@ -94,13 +90,12 @@ const quantityOptionPut = async (
 
       throw new CustomError(messages, 400);
     }
-    const quantityOption = await putQuantityOption(
-      req.body,
-      parseInt(req.params.id)
-    );
-    if (quantityOption) {
+
+    const client = req.body;
+    const result = await putClient(client, parseInt(req.params.id));
+    if (result) {
       const message: MessageResponse = {
-        message: 'QuantityOption updated',
+        message: 'Client updated',
         id: parseInt(req.params.id)
       };
       res.json(message);
@@ -110,29 +105,16 @@ const quantityOptionPut = async (
   }
 };
 
-const quantityOptionDelete = async (
+const clientDelete = async (
   req: Request<{ id: string }, {}, {}>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      const messages = errors
-        .array()
-        .map((error) => {
-          if (error.type === 'field') {
-            return `${error.msg}: ${error.path}`;
-          }
-        })
-        .join(', ');
-
-      throw new CustomError(messages, 400);
-    }
-    const quantityOption = await deleteQuantityOption(parseInt(req.params.id));
-    if (quantityOption) {
+    const result = await deleteClient(parseInt(req.params.id));
+    if (result) {
       const message: MessageResponse = {
-        message: 'QuantityOption deleted',
+        message: 'Client deleted',
         id: parseInt(req.params.id)
       };
       res.json(message);
@@ -142,10 +124,4 @@ const quantityOptionDelete = async (
   }
 };
 
-export {
-  quantityOptionListGet,
-  quantityOptionGet,
-  quantityOptionPost,
-  quantityOptionPut,
-  quantityOptionDelete
-};
+export { clientListGet, clientGet, clientPost, clientPut, clientDelete };
