@@ -5,7 +5,8 @@ import {
   spotPost,
   spotPut,
   spotDelete,
-  spotGapRowPost
+  spotGapRowPost,
+  spotListByProductCodeGet
 } from '../controllers/spotController';
 import { body, check, param } from 'express-validator';
 import passport from 'passport';
@@ -39,12 +40,24 @@ router
   );
 
 router
+  .route('/product/:code')
+  .get(
+    param('code').isString().notEmpty().escape(),
+    passport.authenticate('jwt', { session: false }),
+    spotListByProductCodeGet
+  );
+
+router
   .route('/:id')
   .get(param('id').isNumeric(), spotGet)
   .put(
-    body('spotNumber').isNumeric().notEmpty().escape(),
-    body('gapId').isString().notEmpty().escape(),
-    body('rowId').isInt().notEmpty().escape(),
+    param('id').isNumeric(),
+    body('spotNumber').isNumeric().optional().escape(),
+    body('gapId').isString().optional().escape(),
+    body('rowId').isInt().optional().escape(),
+    body('disabled').isBoolean().optional().escape(),
+    body('shelf').isString().optional().escape(),
+    body('palletId').isNumeric().optional().escape(),
     passport.authenticate('jwt', { session: false }),
     spotPut
   )

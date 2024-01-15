@@ -5,7 +5,8 @@ import {
   deleteSpot,
   putSpot,
   getAllSpots,
-  getSpot
+  getSpot,
+  getSpotsByProductCode
 } from '../models/spotModel';
 import { Request, Response, NextFunction } from 'express';
 
@@ -72,6 +73,35 @@ const spotPost = async (
       id: spotId
     };
     res.json(message);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const spotListByProductCodeGet = async (
+  req: Request<{ code: string }, {}, {}>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => {
+          if (error.type === 'field') {
+            return `${error.msg}: ${error.path}`;
+          }
+        })
+        .join(', ');
+      console.log(messages);
+      throw new CustomError(messages, 400);
+    }
+    const spots = await getSpotsByProductCode(req.params.code);
+    if (spots.length === 0) {
+      throw new CustomError('No spots found', 404);
+    }
+    res.json(spots);
   } catch (error) {
     next(error);
   }
@@ -176,4 +206,12 @@ const spotDelete = async (
   }
 };
 
-export { spotListGet, spotGet, spotPost, spotGapRowPost, spotPut, spotDelete };
+export {
+  spotListGet,
+  spotGet,
+  spotListByProductCodeGet,
+  spotPost,
+  spotGapRowPost,
+  spotPut,
+  spotDelete
+};

@@ -30,7 +30,7 @@ const getAllDockets = async (): Promise<Docket[]> => {
       JSON_OBJECT(
         'id', clients.id,
         'name', clients.name
-      ) AS client,
+      ) AS client
     FROM dockets
     JOIN docketProducts ON dockets.id = docketProducts.docketId
     JOIN products ON docketProducts.productId = products.id
@@ -69,7 +69,7 @@ const getDocket = async (id: string): Promise<Docket> => {
       JSON_OBJECT(
         'id', clients.id,
         'name', clients.name
-      ) AS client,
+      ) AS client
     FROM dockets
     JOIN docketProducts ON dockets.id = docketProducts.docketId
     JOIN products ON docketProducts.productId = products.id
