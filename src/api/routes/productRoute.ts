@@ -35,6 +35,7 @@ router
     body('name').isString().optional().escape(),
     body('weight').isNumeric().optional().escape(),
     body('code').isString().optional().escape(),
+    body('quantityOptionId').isNumeric().notEmpty().escape(),
     passport.authenticate('jwt', { session: false }),
     productPut
   )

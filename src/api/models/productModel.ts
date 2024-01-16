@@ -35,9 +35,9 @@ const getProduct = async (id: string): Promise<Product> => {
 
 const postProduct = async (product: PostProduct) => {
   const [headers] = await promisePool.execute<ResultSetHeader>(
-    `INSERT INTO products (name, code, weight)
-    VALUES (?, ?, ?)`,
-    [product.name, product.code, product.weight]
+    `INSERT INTO products (name, code, weight, quantityOptionId)
+    VALUES (?, ?, ?, ?)`,
+    [product.name, product.code, product.weight, product.quantityOptionId]
   );
   if (headers.affectedRows === 0) {
     throw new CustomError('Product not created', 400);

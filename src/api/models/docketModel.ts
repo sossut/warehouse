@@ -25,7 +25,7 @@ const getAllDockets = async (): Promise<Docket[]> => {
           'code', products.code,
           'weight', products.weight,
           'quantity', docketProducts.productQuantity,
-          'quantityOptionId', docketProducts.quantityOptionId
+          'quantityOptionId', products.quantityOptionId
         )), ']') AS products,
       JSON_OBJECT(
         'id', clients.id,
@@ -64,7 +64,7 @@ const getDocket = async (id: string): Promise<Docket> => {
           'code', products.code,
           'weight', products.weight,
           'quantity', docketProducts.productQuantity,
-          'quantityOptionId', docketProducts.quantityOptionId
+          'quantityOptionId', products.quantityOptionId
         )), ']') AS products,
       JSON_OBJECT(
         'id', clients.id,

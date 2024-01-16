@@ -7,17 +7,37 @@ import { Spot, GetSpot, PostSpot, PutSpot } from '../../interfaces/Spot';
 
 const getAllSpots = async (): Promise<Spot[]> => {
   const [rows] = await promisePool.execute<GetSpot[]>(
-    `SELECT spots.id, spotNumber, gapId, spots.palletId, shelf, disabled,
-    JSON_OBJECT('id', gaps.id, 'rowNumber', gaps.gapNumber, 'spots', gaps.spots) AS gap,
-    JSON_OBJECT('id', whRows.id, 'rowNumber', whrows.rowNumber, 'gaps', whrows.gaps) AS row,
-    JSON_OBJECT('id', pallets.id, 'createdAt', pallets.createdAt, 'updatedAt', pallets.updatedAt) AS pallet,
-    CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
-        'id', products.id,
-        'name', products.name,
-        'code', products.code,
-        'weight', products.weight,
-        'quantity', palletProducts.quantity
-      )), ']') AS products
+    `SELECT 
+      JSON_OBJECT(
+        'id', spots.id, 
+        'spotNumber', spotNumber, 
+        'gapId', gapId, 
+        'palletId', spots.palletId, 
+        'shelf', shelf, 
+        'disabled', disabled,
+        'gap', JSON_OBJECT(
+          'id', gaps.id, 
+          'rowNumber', gaps.gapNumber, 
+          'spots', gaps.spots,
+          'row', JSON_OBJECT(
+            'id', whRows.id, 
+            'rowNumber', whrows.rowNumber, 
+            'gaps', whrows.gaps
+          )
+        ),
+        'pallet', JSON_OBJECT(
+          'id', pallets.id, 
+          'createdAt', pallets.createdAt, 
+          'updatedAt', pallets.updatedAt
+        ),
+        'products', CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+          'id', products.id,
+          'name', products.name,
+          'code', products.code,
+          'weight', products.weight,
+          'quantity', palletProducts.quantity
+        )), ']')
+      ) AS spot
     FROM spots
     LEFT JOIN gaps ON spots.gapId = gaps.id
     LEFT JOIN whrows ON gaps.rowId = whrows.id
@@ -29,64 +49,104 @@ const getAllSpots = async (): Promise<Spot[]> => {
   if (rows.length === 0) {
     throw new CustomError('No spots found', 404);
   }
-  const spots: Spot[] = rows.map((row) => ({
-    ...row,
-    gap: JSON.parse(row.gap.toString() || '{}'),
-    row: JSON.parse(row.row.toString() || '{}'),
-    pallet: JSON.parse(row.pallet.toString() || '{}'),
-    products: JSON.parse(row.products.toString() || '[]')
-  }));
+  const spots: Spot[] = rows.map((row) => {
+    const spot = JSON.parse(row.spot);
+    spot.products = JSON.parse(spot.products);
+    return spot;
+  });
   return spots;
 };
 
 const getSpot = async (id: string): Promise<Spot> => {
   const [rows] = await promisePool.execute<GetSpot[]>(
-    `SELECT spots.id, spotNumber, gapId, spots.palletId, shelf, disabled,
-    JSON_OBJECT('id', gaps.id, 'rowNumber', gaps.gapNumber, 'spots', gaps.spots) AS gap,
-    JSON_OBJECT('id', whRows.id, 'rowNumber', whrows.rowNumber, 'gaps', whrows.gaps) AS row,
-    JSON_OBJECT('id', pallets.id, 'createdAt', pallets.createdAt, 'updatedAt', pallets.updatedAt) AS pallet,
-    CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
-        'id', products.id,
-        'name', products.name,
-        'code', products.code,
-        'weight', products.weight,
-        'quantity', palletProducts.quantity
-      )), ']') AS products
+    `SELECT 
+      JSON_OBJECT(
+        'id', spots.id, 
+        'spotNumber', spotNumber, 
+        'gapId', gapId, 
+        'palletId', spots.palletId, 
+        'shelf', shelf, 
+        'disabled', disabled,
+        'gap', JSON_OBJECT(
+          'id', gaps.id, 
+          'rowNumber', gaps.gapNumber, 
+          'spots', gaps.spots,
+          'row', JSON_OBJECT(
+            'id', whRows.id, 
+            'rowNumber', whrows.rowNumber, 
+            'gaps', whrows.gaps
+          )
+        ),
+        'pallet', JSON_OBJECT(
+          'id', pallets.id, 
+          'createdAt', pallets.createdAt, 
+          'updatedAt', pallets.updatedAt
+        ),
+        'products', CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+          'id', products.id,
+          'name', products.name,
+          'code', products.code,
+          'weight', products.weight,
+          'quantity', palletProducts.quantity
+        )), ']')
+      ) AS spot
     FROM spots
     LEFT JOIN gaps ON spots.gapId = gaps.id
     LEFT JOIN whrows ON gaps.rowId = whrows.id
     LEFT JOIN pallets ON spots.palletId = pallets.id
     LEFT JOIN palletProducts ON pallets.id = palletProducts.palletId
     LEFT JOIN products ON palletProducts.productId = products.id
+
     WHERE spots.id = ?`,
     [id]
   );
   if (rows.length === 0) {
     throw new CustomError('Spot not found', 404);
   }
-  const spots: Spot[] = rows.map((row) => ({
-    ...row,
-    gap: JSON.parse(row.gap.toString() || '{}'),
-    row: JSON.parse(row.row.toString() || '{}'),
-    pallet: JSON.parse(row.pallet.toString() || '{}'),
-    products: JSON.parse(row.products.toString() || '[]')
-  }));
+  const spots: Spot[] = rows.map((row) => {
+    const spot = JSON.parse(row.spot);
+    spot.gap = JSON.parse(spot.gap);
+    spot.pallet = JSON.parse(spot.pallet);
+    spot.products = JSON.parse(spot.products);
+    return spot;
+  });
+
   return spots[0];
 };
 
 const getSpotsByProductCode = async (code: string): Promise<Spot[]> => {
   const [rows] = await promisePool.execute<GetSpot[]>(
-    `SELECT spots.id, spotNumber, gapId, spots.palletId, shelf, disabled,
-    JSON_OBJECT('id', gaps.id, 'rowNumber', gaps.gapNumber, 'spots', gaps.spots) AS gap,
-    JSON_OBJECT('id', whRows.id, 'rowNumber', whrows.rowNumber, 'gaps', whrows.gaps) AS row,
-    JSON_OBJECT('id', pallets.id, 'createdAt', pallets.createdAt, 'updatedAt', pallets.updatedAt) AS pallet,
-    CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
-        'id', products.id,
-        'name', products.name,
-        'code', products.code,
-        'weight', products.weight,
-        'quantity', palletProducts.quantity
-      )), ']') AS products
+    `SELECT 
+      JSON_OBJECT(
+        'id', spots.id, 
+        'spotNumber', spotNumber, 
+        'gapId', gapId, 
+        'palletId', spots.palletId, 
+        'shelf', shelf, 
+        'disabled', disabled,
+        'gap', JSON_OBJECT(
+          'id', gaps.id, 
+          'rowNumber', gaps.gapNumber, 
+          'spots', gaps.spots,
+          'row', JSON_OBJECT(
+            'id', whRows.id, 
+            'rowNumber', whrows.rowNumber, 
+            'gaps', whrows.gaps
+          )
+        ),
+        'pallet', JSON_OBJECT(
+          'id', pallets.id, 
+          'createdAt', pallets.createdAt, 
+          'updatedAt', pallets.updatedAt
+        ),
+        'products', CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+          'id', products.id,
+          'name', products.name,
+          'code', products.code,
+          'weight', products.weight,
+          'quantity', palletProducts.quantity
+        )), ']')
+      ) AS spot
     FROM spots
     LEFT JOIN gaps ON spots.gapId = gaps.id
     LEFT JOIN whrows ON gaps.rowId = whrows.id
@@ -100,13 +160,12 @@ const getSpotsByProductCode = async (code: string): Promise<Spot[]> => {
   if (rows.length === 0) {
     throw new CustomError('No spots found', 404);
   }
-  const spots: Spot[] = rows.map((row) => ({
-    ...row,
-    gap: JSON.parse(row.gap.toString() || '{}'),
-    row: JSON.parse(row.row.toString() || '{}'),
-    pallet: JSON.parse(row.pallet.toString() || '{}'),
-    products: JSON.parse(row.products.toString() || '[]')
-  }));
+  const spots: Spot[] = rows.map((row) => {
+    const spot = JSON.parse(row.spot);
+    spot.products = JSON.parse(spot.products);
+    return spot;
+  });
+
   return spots;
 };
 

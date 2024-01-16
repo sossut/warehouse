@@ -80,8 +80,7 @@ const docketPost = async (
           const dp: DocketProduct = {
             docketId: id,
             productId: product.productId,
-            productQuantity: quantity,
-            quantityOptionId: product.quantityOptionId
+            productQuantity: quantity
           };
           await postDocketProduct(dp);
         }
@@ -131,8 +130,7 @@ const docketPut = async (
         const dp: DocketProduct = {
           docketId: parseInt(req.params.id),
           productId: product.productId,
-          productQuantity: quantity,
-          quantityOptionId: product.quantityOptionId
+          productQuantity: quantity
         };
         await postDocketProduct(dp);
       }
