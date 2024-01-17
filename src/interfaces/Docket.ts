@@ -11,6 +11,7 @@ interface Docket {
   status: 'open' | 'closed';
   departureAt: Date | null;
   transportOptionId: number | TransportOption;
+  filename: string;
   products?: DocketProduct[];
 }
 
