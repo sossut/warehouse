@@ -5,6 +5,25 @@ import { ResultSetHeader } from 'mysql2';
 
 import { Row, GetRow, PostRow, PutRow } from '../../interfaces/Row';
 
+const parseNestedJSON = (obj: any): any => {
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+  for (const key in obj) {
+    if (typeof obj[key] === 'string') {
+      try {
+        obj[key] = JSON.parse(obj[key]);
+      } catch (e) {
+        // not a JSON string
+      }
+    }
+    if (typeof obj[key] === 'object') {
+      obj[key] = parseNestedJSON(obj[key]);
+    }
+  }
+  return obj;
+};
+
 const getAllRows = async (): Promise<Row[]> => {
   const [rows] = await promisePool.execute<GetRow[]>(
     `SELECT *
@@ -14,6 +33,71 @@ const getAllRows = async (): Promise<Row[]> => {
     throw new CustomError('No rows found', 404);
   }
   return rows;
+};
+
+const getAllRowsGapsSpots = async (): Promise<Row[]> => {
+  const [rows] = await promisePool.execute<GetRow[]>(
+    `SELECT 
+      whrows.id, 
+      whrows.rowNumber, 
+      (
+        SELECT 
+          JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'id', gaps.id, 
+              'gapNumber', gaps.gapNumber, 
+              'data', (
+                SELECT 
+                  JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                      'id', spots.id, 
+                      'spotNumber', spots.spotNumber, 
+                      'pallet', (
+                        SELECT 
+                          JSON_OBJECT(
+                            'id', pallets.id, 
+                            'createdAt', pallets.createdAt, 
+                            'updatedAt', pallets.updatedAt,
+                            'products', (
+                              SELECT 
+                                JSON_ARRAYAGG(
+                                  JSON_OBJECT(
+                                    'id', products.id,
+                                    'name', products.name,
+                                    'code', products.code,
+                                    'weight', products.weight,
+                                    'quantity', palletProducts.quantity
+                                  )
+                                )
+                              FROM palletProducts
+                              LEFT JOIN products ON palletProducts.productId = products.id
+                              WHERE palletProducts.palletId = pallets.id
+                            )
+                          )
+                        FROM pallets
+                        WHERE pallets.id = spots.palletId
+                      )
+                    )
+                  )
+                FROM spots
+                WHERE spots.gapId = gaps.id
+              )
+            )
+          )
+        FROM gaps
+        WHERE gaps.rowId = whrows.id
+      ) AS data
+    FROM whrows`
+  );
+  if (rows.length === 0) {
+    throw new CustomError('No rows found', 404);
+  }
+  const rowsWithGaps = rows.map((row) => {
+    const data = JSON.parse(row.data?.toString() || '[]');
+    const { gaps, ...rowWithoutGaps } = row;
+    return parseNestedJSON({ ...rowWithoutGaps, data });
+  });
+  return rowsWithGaps;
 };
 
 const getRow = async (id: string): Promise<Row> => {
@@ -63,4 +147,4 @@ const deleteRow = async (id: number): Promise<boolean> => {
   return true;
 };
 
-export { getAllRows, getRow, postRow, putRow, deleteRow };
+export { getAllRows, getAllRowsGapsSpots, getRow, postRow, putRow, deleteRow };

@@ -5,7 +5,8 @@ import {
   getRow,
   postRow,
   putRow,
-  deleteRow
+  deleteRow,
+  getAllRowsGapsSpots
 } from '../models/rowModel';
 
 import { Request, Response, NextFunction } from 'express';
@@ -17,6 +18,19 @@ import MessageResponse from '../../interfaces/MessageResponse';
 const rowListGet = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const rows = await getAllRows();
+    res.json(rows);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const rowListGetGapsSpots = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const rows = await getAllRowsGapsSpots();
     res.json(rows);
   } catch (error) {
     next(error);
@@ -117,4 +131,4 @@ const rowDelete = async (
   }
 };
 
-export { rowListGet, rowGet, rowPost, rowPut, rowDelete };
+export { rowListGet, rowListGetGapsSpots, rowGet, rowPost, rowPut, rowDelete };

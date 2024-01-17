@@ -4,7 +4,8 @@ import {
   rowGet,
   rowPost,
   rowPut,
-  rowDelete
+  rowDelete,
+  rowListGetGapsSpots
   // rowGapSpotPost
 } from '../controllers/rowController';
 import { body, param } from 'express-validator';
@@ -20,6 +21,10 @@ router
     passport.authenticate('jwt', { session: false }),
     rowPost
   );
+
+router
+  .route('/nested')
+  .get(passport.authenticate('jwt', { session: false }), rowListGetGapsSpots);
 
 router
   .route('/:id')
