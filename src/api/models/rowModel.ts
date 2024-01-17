@@ -4,6 +4,11 @@ import CustomError from '../../classes/CustomError';
 import { ResultSetHeader } from 'mysql2';
 
 import { Row, GetRow, PostRow, PutRow } from '../../interfaces/Row';
+import { GetGap } from '../../interfaces/Gap';
+import { GetSpot } from '../../interfaces/Spot';
+import { GetPallet } from '../../interfaces/Pallet';
+import { GetProduct } from '../../interfaces/Product';
+import { GetPalletProduct } from '../../interfaces/PalletProduct';
 
 const parseNestedJSON = (obj: any): any => {
   if (typeof obj !== 'object') {
@@ -37,66 +42,54 @@ const getAllRows = async (): Promise<Row[]> => {
 
 const getAllRowsGapsSpots = async (): Promise<Row[]> => {
   const [rows] = await promisePool.execute<GetRow[]>(
-    `SELECT 
-      whrows.id, 
-      whrows.rowNumber, 
-      (
-        SELECT 
-          JSON_ARRAYAGG(
-            JSON_OBJECT(
-              'id', gaps.id, 
-              'gapNumber', gaps.gapNumber, 
-              'data', (
-                SELECT 
-                  JSON_ARRAYAGG(
-                    JSON_OBJECT(
-                      'id', spots.id, 
-                      'spotNumber', spots.spotNumber, 
-                      'pallet', (
-                        SELECT 
-                          JSON_OBJECT(
-                            'id', pallets.id, 
-                            'createdAt', pallets.createdAt, 
-                            'updatedAt', pallets.updatedAt,
-                            'products', (
-                              SELECT 
-                                JSON_ARRAYAGG(
-                                  JSON_OBJECT(
-                                    'id', products.id,
-                                    'name', products.name,
-                                    'code', products.code,
-                                    'weight', products.weight,
-                                    'quantity', palletProducts.quantity
-                                  )
-                                )
-                              FROM palletProducts
-                              LEFT JOIN products ON palletProducts.productId = products.id
-                              WHERE palletProducts.palletId = pallets.id
-                            )
-                          )
-                        FROM pallets
-                        WHERE pallets.id = spots.palletId
-                      )
-                    )
-                  )
-                FROM spots
-                WHERE spots.gapId = gaps.id
-              )
-            )
-          )
-        FROM gaps
-        WHERE gaps.rowId = whrows.id
-      ) AS data
-    FROM whrows`
+    'SELECT id, rowNumber FROM whrows'
   );
-  if (rows.length === 0) {
-    throw new CustomError('No rows found', 404);
-  }
-  const rowsWithGaps = rows.map((row) => {
-    const data = JSON.parse(row.data?.toString() || '[]');
-    const { gaps, ...rowWithoutGaps } = row;
-    return parseNestedJSON({ ...rowWithoutGaps, data });
-  });
+  const rowsWithGaps = await Promise.all(
+    rows.map(async (row) => {
+      const [gaps] = await promisePool.execute<GetGap[]>(
+        'SELECT id, gapNumber FROM gaps WHERE rowId = ?',
+        [row.id]
+      );
+
+      // For each gap, get all spots
+      const gapsWithSpots = await Promise.all(
+        gaps.map(async (gap) => {
+          const [spots] = await promisePool.execute<GetSpot[]>(
+            'SELECT id, spotNumber, palletId FROM spots WHERE gapId = ?',
+            [gap.id]
+          );
+
+          // For each spot, get the pallet and its products
+          const spotsWithPallets = await Promise.all(
+            spots.map(async (spot) => {
+              const [pallets] = await promisePool.execute<GetPallet[]>(
+                'SELECT id, createdAt, updatedAt FROM pallets WHERE id = ?',
+                [spot.palletId]
+              );
+              const pallet = pallets[0];
+
+              if (pallet) {
+                const [products] = await promisePool.execute<
+                  GetPalletProduct[]
+                >(
+                  'SELECT products.id, products.name, products.code, products.weight, palletProducts.quantity, palletProducts.palletId, palletProducts.productId FROM palletProducts LEFT JOIN products ON palletProducts.productId = products.id WHERE palletProducts.palletId = ?',
+                  [pallet.id]
+                );
+                pallet.products = products;
+              }
+
+              return { ...spot, pallet };
+            })
+          );
+
+          return { ...gap, data: spotsWithPallets };
+        })
+      );
+
+      return { ...row, data: gapsWithSpots };
+    })
+  );
+
   return rowsWithGaps;
 };
 
