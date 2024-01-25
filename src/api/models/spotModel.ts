@@ -114,6 +114,17 @@ const getSpot = async (id: string): Promise<Spot> => {
   return spots[0];
 };
 
+const getSpotByPalletId = async (id: string): Promise<number> => {
+  const [rows] = await promisePool.execute<GetSpot[]>(
+    'SELECT * FROM spots WHERE palletId = ?',
+    [id]
+  );
+  if (rows.length === 0) {
+    throw new CustomError('Spot not found', 404);
+  }
+  return rows[0].id;
+};
+
 const getSpotsByProductCode = async (code: string): Promise<Spot[]> => {
   const [rows] = await promisePool.execute<GetSpot[]>(
     `SELECT 
@@ -210,6 +221,7 @@ const deleteSpot = async (id: number): Promise<boolean> => {
 export {
   getAllSpots,
   getSpot,
+  getSpotByPalletId,
   getSpotsByProductCode,
   postSpot,
   putSpot,
