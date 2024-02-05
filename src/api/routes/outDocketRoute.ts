@@ -1,11 +1,11 @@
 import express, { Request } from 'express';
 import {
-  docketListGet,
-  docketGet,
-  docketPost,
-  docketPut,
-  docketDelete
-} from '../controllers/docketController';
+  OutDocketListGet,
+  OutDocketGet,
+  OutDocketPost,
+  OutDocketPut,
+  OutDocketDelete
+} from '../controllers/outDocketController';
 import { body, param } from 'express-validator';
 
 import passport from 'passport';
@@ -29,14 +29,14 @@ const router = express.Router();
 
 router
   .route('/')
-  .get(passport.authenticate('jwt', { session: false }), docketListGet)
+  .get(passport.authenticate('jwt', { session: false }), OutDocketListGet)
   .post(
     body('departureAt').isDate().optional().escape(),
     body('transportOptionId').isNumeric().optional().escape(),
     body('clientId').isNumeric().optional().escape(),
     upload.single('filename'),
     passport.authenticate('jwt', { session: false }),
-    docketPost
+    OutDocketPost
   );
 
 router
@@ -44,9 +44,9 @@ router
   .get(
     param('id').isNumeric(),
     passport.authenticate('jwt', { session: false }),
-    docketGet
+    OutDocketGet
   )
-  .put(passport.authenticate('jwt', { session: false }), docketPut)
-  .delete(passport.authenticate('jwt', { session: false }), docketDelete);
+  .put(passport.authenticate('jwt', { session: false }), OutDocketPut)
+  .delete(passport.authenticate('jwt', { session: false }), OutDocketDelete);
 
 export default router;

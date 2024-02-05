@@ -10,7 +10,7 @@ import spotRoute from './routes/spotRoute';
 import palletRoute from './routes/palletRoute';
 import quantityOptionRoute from './routes/quantityOptionRoute';
 import transportOptionRoute from './routes/transportOptionRoute';
-import docketRoute from './routes/docketRoute';
+import OutDocketRoute from './routes/OutDocketRoute';
 import clientRoute from './routes/clientRoute';
 
 const router = express.Router();
@@ -18,7 +18,7 @@ const router = express.Router();
 router.get<{}, MessageResponse>('/', (req, res) => {
   res.json({
     message:
-      'api/v1/ - user, product, auth, row, gap, spot, pallet, quantity-option, transport-option, docket, client'
+      'api/v1/ - user, product, auth, row, gap, spot, pallet, quantity-option, transport-option, OutDocket, client'
   });
 });
 
@@ -31,7 +31,7 @@ router.use('/spot', spotRoute);
 router.use('/pallet', palletRoute);
 router.use('/quantity-option', quantityOptionRoute);
 router.use('/transport-option', transportOptionRoute);
-router.use('/docket', docketRoute);
+router.use('/OutDocket', OutDocketRoute);
 router.use('/client', clientRoute);
 
 export default router;

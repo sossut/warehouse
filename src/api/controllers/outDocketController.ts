@@ -1,53 +1,53 @@
 import { validationResult } from 'express-validator';
 
 import {
-  getAllDockets,
-  getDocket,
-  postDocket,
-  putDocket,
-  deleteDocket
-} from '../models/docketModel';
+  getAllOutDockets,
+  getOutDocket,
+  postOutDocket,
+  putOutDocket,
+  deleteOutDocket
+} from '../models/outDocketModel';
 
 import { Request, Response, NextFunction } from 'express';
 
-import { PostDocket, PutDocket } from '../../interfaces/Docket';
+import { PostOutDocket, PutOutDocket } from '../../interfaces/OutDocket';
 import CustomError from '../../classes/CustomError';
 import MessageResponse from '../../interfaces/MessageResponse';
 import { User } from '../../interfaces/User';
-import { DocketProduct } from '../../interfaces/DocketProduct';
+import { OutDocketProduct } from '../../interfaces/OutDocketProduct';
 import {
-  deleteDocketProductByDocketId,
-  postDocketProduct
-} from '../models/docketProductModel';
+  deleteOutDocketProductByOutDocketId,
+  postOutDocketProduct
+} from '../models/outDocketProductModel';
 
-const docketListGet = async (
+const OutDocketListGet = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const dockets = await getAllDockets();
-    res.json(dockets);
+    const OutDockets = await getAllOutDockets();
+    res.json(OutDockets);
   } catch (error) {
     next(error);
   }
 };
 
-const docketGet = async (
+const OutDocketGet = async (
   req: Request<{ id: string }, {}, {}>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const docket = await getDocket(req.params.id);
-    res.json(docket);
+    const OutDocket = await getOutDocket(req.params.id);
+    res.json(OutDocket);
   } catch (error) {
     next(error);
   }
 };
 
-const docketPost = async (
-  req: Request<{}, {}, PostDocket>,
+const OutDocketPost = async (
+  req: Request<{}, {}, PostOutDocket>,
   res: Response,
   next: NextFunction
 ) => {
@@ -68,26 +68,27 @@ const docketPost = async (
 
     req.body.userId = (req.user as User).id;
 
-    const id = await postDocket(req.body);
+    const id = await postOutDocket(req.body);
     const products = req.body.products;
     if (id) {
       if (products) {
         for (const product of products) {
-          let quantity = product.productQuantity;
+          let quantity = product.orderedProductQuantity;
           if (!quantity) {
             quantity = 0;
           }
-          const dp: DocketProduct = {
-            docketId: id,
+          const dp: OutDocketProduct = {
+            OutDocketId: id,
             productId: product.productId,
-            productQuantity: quantity
+            orderedProductQuantity: quantity,
+            deliveredProductQuantity: product.deliveredProductQuantity
           };
-          await postDocketProduct(dp);
+          await postOutDocketProduct(dp);
         }
       }
     }
     const message: MessageResponse = {
-      message: 'Docket created',
+      message: 'OutDocket created',
       id: id
     };
     res.json(message);
@@ -96,8 +97,8 @@ const docketPost = async (
   }
 };
 
-const docketPut = async (
-  req: Request<{ id: string }, {}, PutDocket>,
+const OutDocketPut = async (
+  req: Request<{ id: string }, {}, PutOutDocket>,
   res: Response,
   next: NextFunction
 ) => {
@@ -119,30 +120,31 @@ const docketPut = async (
 
     if (products) {
       try {
-        await deleteDocketProductByDocketId(parseInt(req.params.id));
+        await deleteOutDocketProductByOutDocketId(parseInt(req.params.id));
       } catch (error) {}
 
       for (const product of products) {
-        let quantity = product.productQuantity;
+        let quantity = product.orderedProductQuantity;
         if (!quantity) {
           quantity = 0;
         }
-        const dp: DocketProduct = {
-          docketId: parseInt(req.params.id),
+        const dp: OutDocketProduct = {
+          OutDocketId: parseInt(req.params.id),
           productId: product.productId,
-          productQuantity: quantity
+          orderedProductQuantity: quantity,
+          deliveredProductQuantity: product.deliveredProductQuantity
         };
-        await postDocketProduct(dp);
+        await postOutDocketProduct(dp);
       }
     }
     delete req.body.products;
     req.body.updatedAt = new Date();
-    const result = await putDocket(req.body, parseInt(req.params.id));
+    const result = await putOutDocket(req.body, parseInt(req.params.id));
     if (!result) {
-      throw new CustomError('Docket not updated', 400);
+      throw new CustomError('OutDocket not updated', 400);
     }
     const message: MessageResponse = {
-      message: 'Docket updated',
+      message: 'OutDocket updated',
       id: parseInt(req.params.id)
     };
     res.json(message);
@@ -151,18 +153,18 @@ const docketPut = async (
   }
 };
 
-const docketDelete = async (
+const OutDocketDelete = async (
   req: Request<{ id: string }, {}, {}>,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const result = await deleteDocket(parseInt(req.params.id));
+    const result = await deleteOutDocket(parseInt(req.params.id));
     if (!result) {
-      throw new CustomError('Docket not deleted', 400);
+      throw new CustomError('OutDocket not deleted', 400);
     }
     const message: MessageResponse = {
-      message: 'Docket deleted',
+      message: 'OutDocket deleted',
       id: parseInt(req.params.id)
     };
     res.json(message);
@@ -171,4 +173,10 @@ const docketDelete = async (
   }
 };
 
-export { docketListGet, docketGet, docketPost, docketPut, docketDelete };
+export {
+  OutDocketListGet,
+  OutDocketGet,
+  OutDocketPost,
+  OutDocketPut,
+  OutDocketDelete
+};
