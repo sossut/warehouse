@@ -55,34 +55,34 @@ const getAllRowsGapsSpots = async (): Promise<Row[]> => {
       const gapsWithSpots = await Promise.all(
         gaps.map(async (gap) => {
           const [spots] = await promisePool.execute<GetSpot[]>(
-            'SELECT id, spotNumber, palletId FROM spots WHERE gapId = ?',
+            'SELECT id, spotNumber FROM spots WHERE gapId = ?',
             [gap.id]
           );
 
           // For each spot, get the pallet and its products
-          const spotsWithPallets = await Promise.all(
-            spots.map(async (spot) => {
-              const [pallets] = await promisePool.execute<GetPallet[]>(
-                'SELECT id, createdAt, updatedAt FROM pallets WHERE id = ?',
-                [spot.palletId]
-              );
-              const pallet = pallets[0];
+          // const spotsWithPallets = await Promise.all(
+          //   spots.map(async (spot) => {
+          //     const [pallets] = await promisePool.execute<GetPallet[]>(
+          //       'SELECT id, createdAt, updatedAt FROM pallets WHERE spotId = ?',
+          //       [spot.id]
+          //     );
+          //     const pallet = pallets[0];
 
-              if (pallet) {
-                const [products] = await promisePool.execute<
-                  GetPalletProduct[]
-                >(
-                  'SELECT products.id, products.name, products.code, products.weight, palletProducts.quantity, palletProducts.palletId, palletProducts.productId FROM palletProducts LEFT JOIN products ON palletProducts.productId = products.id WHERE palletProducts.palletId = ?',
-                  [pallet.id]
-                );
-                pallet.products = products;
-              }
+          //     if (pallet) {
+          //       const [products] = await promisePool.execute<
+          //         GetPalletProduct[]
+          //       >(
+          //         'SELECT products.id, products.name, products.code, products.weight, palletProducts.quantity, palletProducts.palletId, palletProducts.productId FROM palletProducts LEFT JOIN products ON palletProducts.productId = products.id WHERE palletProducts.palletId = ?',
+          //         [pallet.id]
+          //       );
+          //       pallet.products = products;
+          //     }
 
-              return { ...spot, pallet };
-            })
-          );
+          //     return { ...spot };
+          //   })
+          // );
 
-          return { ...gap, data: spotsWithPallets };
+          return { ...gap, data: spots };
         })
       );
 

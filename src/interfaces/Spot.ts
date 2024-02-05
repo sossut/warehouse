@@ -5,7 +5,6 @@ interface Spot {
   id: number;
   spotNumber: number;
   gapId: number | Gap;
-  palletId: number | null;
   shelf: boolean;
   disabled: boolean;
   data?: Array<{

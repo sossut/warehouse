@@ -1,9 +1,7 @@
 import { RowDataPacket } from 'mysql2';
-import { Pallet } from './Pallet';
 
 interface FloorSpot {
   id: number;
-  palletId: number | Pallet;
 }
 
 interface GetFloorSpot extends RowDataPacket, FloorSpot {}

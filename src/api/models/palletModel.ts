@@ -7,7 +7,7 @@ import { GetPallet, PutPallet, Pallet } from '../../interfaces/Pallet';
 const getAllPallets = async (): Promise<Pallet[]> => {
   const [rows] = await promisePool.execute<GetPallet[]>(
     `SELECT 
-      JSON_OBJECT('id', pallets.id, 'createdAt', pallets.createdAt, 'updatedAt', pallets.updatedAt) AS pallet,
+      pallets.id, pallets.createdAt, pallets.updatedAt, spotId,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
           'name', products.name,
@@ -26,7 +26,6 @@ const getAllPallets = async (): Promise<Pallet[]> => {
   }
   const pallets = rows.map((row) => ({
     ...row,
-    pallet: JSON.parse(row.pallet.toString() || '{}'),
     products: JSON.parse(row.products?.toString() || '{}')
   }));
   return pallets;
@@ -35,7 +34,7 @@ const getAllPallets = async (): Promise<Pallet[]> => {
 const getPallet = async (id: string): Promise<Pallet> => {
   const [rows] = await promisePool.execute<GetPallet[]>(
     `SELECT 
-      JSON_OBJECT('id', pallets.id, 'createdAt', pallets.createdAt, 'updatedAt', pallets.updatedAt) AS pallet,
+      pallets.id, pallets.createdAt, pallets.updatedAt, spotId,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
           'name', products.name,
@@ -56,7 +55,6 @@ const getPallet = async (id: string): Promise<Pallet> => {
   }
   const pallets = rows.map((row) => ({
     ...row,
-    pallet: JSON.parse(row.pallet.toString() || '{}'),
     products: JSON.parse(row.products?.toString() || '{}')
   }));
   return pallets[0];

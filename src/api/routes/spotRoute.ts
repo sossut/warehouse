@@ -57,7 +57,6 @@ router
     body('rowId').isInt().optional().escape(),
     body('disabled').isBoolean().optional().escape(),
     body('shelf').isString().optional().escape(),
-    body('palletId').isNumeric().optional().escape(),
     passport.authenticate('jwt', { session: false }),
     spotPut
   )

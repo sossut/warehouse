@@ -18,7 +18,6 @@ import {
   postPalletProduct
 } from '../models/palletProductModel';
 import { PalletProduct } from '../../interfaces/PalletProduct';
-import { getSpotByPalletId, putSpot } from '../models/spotModel';
 
 const palletListGet = async (
   req: Request,
@@ -153,11 +152,7 @@ const palletDelete = async (
 ) => {
   try {
     // write the code to update spots table to set palletId to null
-    const spotId = await getSpotByPalletId(req.params.id);
-    const s = await putSpot({ palletId: null }, spotId);
-    if (!s) {
-      throw new CustomError('Spot not updated', 400);
-    }
+
     const result = await deletePallet(parseInt(req.params.id));
     if (result) {
       const message: MessageResponse = {

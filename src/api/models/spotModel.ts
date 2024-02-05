@@ -12,7 +12,6 @@ const getAllSpots = async (): Promise<Spot[]> => {
         'id', spots.id, 
         'spotNumber', spotNumber, 
         'gapId', gapId, 
-        'palletId', spots.palletId, 
         'shelf', shelf, 
         'disabled', disabled,
         'gap', JSON_OBJECT(
@@ -41,7 +40,7 @@ const getAllSpots = async (): Promise<Spot[]> => {
     FROM spots
     LEFT JOIN gaps ON spots.gapId = gaps.id
     LEFT JOIN whrows ON gaps.rowId = whrows.id
-    LEFT JOIN pallets ON spots.palletId = pallets.id
+    LEFT JOIN pallets ON spots.id = pallets.spotId
     LEFT JOIN palletProducts ON pallets.id = palletProducts.palletId
     LEFT JOIN products ON palletProducts.productId = products.id
     GROUP BY spots.id`
@@ -64,7 +63,6 @@ const getSpot = async (id: string): Promise<Spot> => {
         'id', spots.id, 
         'spotNumber', spotNumber, 
         'gapId', gapId, 
-        'palletId', spots.palletId, 
         'shelf', shelf, 
         'disabled', disabled,
         'gap', JSON_OBJECT(
@@ -93,7 +91,7 @@ const getSpot = async (id: string): Promise<Spot> => {
     FROM spots
     LEFT JOIN gaps ON spots.gapId = gaps.id
     LEFT JOIN whrows ON gaps.rowId = whrows.id
-    LEFT JOIN pallets ON spots.palletId = pallets.id
+    LEFT JOIN pallets ON spots.id = pallets.spotId
     LEFT JOIN palletProducts ON pallets.id = palletProducts.palletId
     LEFT JOIN products ON palletProducts.productId = products.id
 
@@ -114,17 +112,6 @@ const getSpot = async (id: string): Promise<Spot> => {
   return spots[0];
 };
 
-const getSpotByPalletId = async (id: string): Promise<number> => {
-  const [rows] = await promisePool.execute<GetSpot[]>(
-    'SELECT * FROM spots WHERE palletId = ?',
-    [id]
-  );
-  if (rows.length === 0) {
-    throw new CustomError('Spot not found', 404);
-  }
-  return rows[0].id;
-};
-
 const getSpotsByProductCode = async (code: string): Promise<Spot[]> => {
   const [rows] = await promisePool.execute<GetSpot[]>(
     `SELECT 
@@ -132,7 +119,6 @@ const getSpotsByProductCode = async (code: string): Promise<Spot[]> => {
         'id', spots.id, 
         'spotNumber', spotNumber, 
         'gapId', gapId, 
-        'palletId', spots.palletId, 
         'shelf', shelf, 
         'disabled', disabled,
         'gap', JSON_OBJECT(
@@ -161,7 +147,7 @@ const getSpotsByProductCode = async (code: string): Promise<Spot[]> => {
     FROM spots
     LEFT JOIN gaps ON spots.gapId = gaps.id
     LEFT JOIN whrows ON gaps.rowId = whrows.id
-    LEFT JOIN pallets ON spots.palletId = pallets.id
+    LEFT JOIN pallets ON spots.id = pallets.spotsId
     LEFT JOIN palletProducts ON pallets.id = palletProducts.palletId
     LEFT JOIN products ON palletProducts.productId = products.id
     WHERE products.code = ?
@@ -221,7 +207,6 @@ const deleteSpot = async (id: number): Promise<boolean> => {
 export {
   getAllSpots,
   getSpot,
-  getSpotByPalletId,
   getSpotsByProductCode,
   postSpot,
   putSpot,

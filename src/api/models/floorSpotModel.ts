@@ -6,7 +6,6 @@ import { ResultSetHeader } from 'mysql2';
 import {
   FloorSpot,
   GetFloorSpot,
-  PostFloorSpot,
   PutFloorSpot
 } from '../../interfaces/FloorSpot';
 
@@ -34,11 +33,10 @@ const getFloorSpot = async (id: string): Promise<FloorSpot> => {
   return rows[0];
 };
 
-const postFloorSpot = async (floorSpot: PostFloorSpot) => {
+const postFloorSpot = async () => {
   const [headers] = await promisePool.execute<ResultSetHeader>(
-    `INSERT INTO floorSpots (palletId)
-    VALUES (?)`,
-    [floorSpot.palletId]
+    `INSERT INTO floorSpots ()
+    VALUES ()`
   );
   if (headers.affectedRows === 0) {
     throw new CustomError('FloorSpot not created', 400);
