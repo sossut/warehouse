@@ -10,7 +10,7 @@ import spotRoute from './routes/spotRoute';
 import palletRoute from './routes/palletRoute';
 import quantityOptionRoute from './routes/quantityOptionRoute';
 import transportOptionRoute from './routes/transportOptionRoute';
-import OutDocketRoute from './routes/OutDocketRoute';
+import OutDocketRoute from './routes/outDocketRoute';
 import clientRoute from './routes/clientRoute';
 
 const router = express.Router();
@@ -31,7 +31,7 @@ router.use('/spot', spotRoute);
 router.use('/pallet', palletRoute);
 router.use('/quantity-option', quantityOptionRoute);
 router.use('/transport-option', transportOptionRoute);
-router.use('/OutDocket', OutDocketRoute);
+router.use('/outdocket', OutDocketRoute);
 router.use('/client', clientRoute);
 
 export default router;

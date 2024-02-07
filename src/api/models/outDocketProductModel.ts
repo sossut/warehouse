@@ -51,11 +51,11 @@ const getOutDocketProductsIdsByOutDocketId = async (
 
 const postOutDocketProduct = async (outDocketProduct: PostOutDocketProduct) => {
   const sql = promisePool.format(
-    `INSERT INTO OutDocketProducts (productId, OutDocketId, productQuantity, quantityOptionId, deliveredProductQuantity)
+    `INSERT INTO OutDocketProducts (productId, OutDocketId, orderedProductQuantity, deliveredProductQuantity)
     VALUES (?, ?, ?, ?)`,
     [
       outDocketProduct.productId,
-      outDocketProduct.OutDocketId,
+      outDocketProduct.outDocketId,
       outDocketProduct.orderedProductQuantity,
       outDocketProduct.deliveredProductQuantity
     ]

@@ -5,7 +5,7 @@ import { OutDocketProduct } from './OutDocketProduct';
 
 interface OutDocket {
   id: number;
-  OutDocketNumber: string;
+  docketNumber: string;
   createdAt: Date;
   updatedAt: Date;
   userId: number | User;

@@ -4,7 +4,7 @@ import { Product } from './Product';
 
 interface OutDocketProduct {
   id?: number;
-  OutDocketId: number | OutDocket;
+  outDocketId: number | OutDocket;
   productId: number | Product;
   orderedProductQuantity: number;
   deliveredProductQuantity: number;

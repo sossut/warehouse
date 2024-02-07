@@ -2,7 +2,7 @@ import { RowDataPacket } from 'mysql2';
 import { User } from './User';
 import { Vendor } from './Vendor';
 
-interface OutDocket {
+interface InDocket {
   id: number;
   docketNumber: string;
   createdAt: Date;
@@ -14,10 +14,10 @@ interface OutDocket {
   filename: string;
 }
 
-interface GetOutDocket extends RowDataPacket, OutDocket {}
+interface GetInDocket extends RowDataPacket, InDocket {}
 
-type PostOutDocket = Omit<OutDocket, 'id'>;
+type PostInDocket = Omit<InDocket, 'id'>;
 
-type PutOutDocket = Partial<PostOutDocket>;
+type PutInDocket = Partial<PostInDocket>;
 
-export { OutDocket, GetOutDocket, PostOutDocket, PutOutDocket };
+export { InDocket, GetInDocket, PostInDocket, PutInDocket };

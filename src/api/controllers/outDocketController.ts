@@ -78,7 +78,7 @@ const OutDocketPost = async (
             quantity = 0;
           }
           const dp: OutDocketProduct = {
-            OutDocketId: id,
+            outDocketId: id,
             productId: product.productId,
             orderedProductQuantity: quantity,
             deliveredProductQuantity: product.deliveredProductQuantity
@@ -129,7 +129,7 @@ const OutDocketPut = async (
           quantity = 0;
         }
         const dp: OutDocketProduct = {
-          OutDocketId: parseInt(req.params.id),
+          outDocketId: parseInt(req.params.id),
           productId: product.productId,
           orderedProductQuantity: quantity,
           deliveredProductQuantity: product.deliveredProductQuantity

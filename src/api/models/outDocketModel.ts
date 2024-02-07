@@ -13,18 +13,14 @@ import {
 const getAllOutDockets = async (): Promise<OutDocket[]> => {
   const [rows] = await promisePool.execute<GetOutDocket[]>(
     `SELECT 
-      JSON_OBJECT(
-        'id', OutDockets.id, 
-        'departureAt', OutDockets.departureAt, 
-        'transportOptionId', 
-        OutDockets.transportOptionId, 
-        'userId', OutDockets.userId) AS OutDocket,
+       OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
           'name', products.name,
           'code', products.code,
           'weight', products.weight,
-          'quantity', OutDocketProducts.productQuantity,
+          'orderedQuantity', OutDocketProducts.orderedProductQuantity,
+          'deliveredQuantity', OutDocketProducts.deliveredProductQuantity,
           'quantityOptionId', products.quantityOptionId
         )), ']') AS products,
       JSON_OBJECT(
@@ -42,7 +38,6 @@ const getAllOutDockets = async (): Promise<OutDocket[]> => {
   }
   const OutDockets = rows.map((row) => ({
     ...row,
-    OutDocket: JSON.parse(row.OutDocket.toString() || '{}'),
     products: JSON.parse(row.products?.toString() || '{}'),
     client: JSON.parse(row.client?.toString() || '{}')
   }));
@@ -51,19 +46,15 @@ const getAllOutDockets = async (): Promise<OutDocket[]> => {
 
 const getOutDocket = async (id: string): Promise<OutDocket> => {
   const [rows] = await promisePool.execute<GetOutDocket[]>(
-    `SELECT 
-      JSON_OBJECT(
-        'id', OutDockets.id, 
-        'departureAt', OutDockets.departureAt, 
-        'transportOptionId', 
-        OutDockets.transportOptionId, 
-        'userId', OutDockets.userId) AS OutDocket,
+    `SELECT
+      OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
           'name', products.name,
           'code', products.code,
           'weight', products.weight,
-          'quantity', OutDocketProducts.productQuantity,
+          'orderedQuantity', OutDocketProducts.orderedProductQuantity,
+          'deliveredQuantity', OutDocketProducts.deliveredProductQuantity,
           'quantityOptionId', products.quantityOptionId
         )), ']') AS products,
       JSON_OBJECT(
@@ -82,7 +73,6 @@ const getOutDocket = async (id: string): Promise<OutDocket> => {
   }
   const OutDockets = rows.map((row) => ({
     ...row,
-    OutDocket: JSON.parse(row.OutDocket.toString() || '{}'),
     products: JSON.parse(row.products?.toString() || '{}'),
     client: JSON.parse(row.client?.toString() || '{}')
   }));
@@ -91,9 +81,14 @@ const getOutDocket = async (id: string): Promise<OutDocket> => {
 
 const postOutDocket = async (outDocket: PostOutDocket) => {
   const sql = promisePool.format(
-    `INSERT INTO OutDockets (departureAt, transportOptionId, userId)
-    VALUES (?, ?, ?)`,
-    [outDocket.departureAt, outDocket.transportOptionId, outDocket.userId]
+    `INSERT INTO OutDockets (departureAt, transportOptionId, userId, docketNumber)
+    VALUES (?, ?, ?, ?)`,
+    [
+      outDocket.departureAt,
+      outDocket.transportOptionId,
+      outDocket.userId,
+      outDocket.docketNumber
+    ]
   );
   console.log(sql);
   const [headers] = await promisePool.execute<ResultSetHeader>(sql);

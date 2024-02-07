@@ -34,6 +34,8 @@ router
     body('departureAt').isDate().optional().escape(),
     body('transportOptionId').isNumeric().optional().escape(),
     body('clientId').isNumeric().optional().escape(),
+    body('filename').isString().optional().escape(),
+    body('docketNumber').isString().optional().escape(),
     upload.single('filename'),
     passport.authenticate('jwt', { session: false }),
     OutDocketPost
