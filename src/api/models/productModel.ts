@@ -12,7 +12,8 @@ import {
 const getAllProducts = async (): Promise<Product[]> => {
   const [rows] = await promisePool.execute<GetProduct[]>(
     `SELECT *
-    FROM products`
+    FROM products
+    ORDER BY code`
   );
   if (rows.length === 0) {
     throw new CustomError('No products found', 404);

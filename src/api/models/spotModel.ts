@@ -16,7 +16,7 @@ const getAllSpots = async (): Promise<Spot[]> => {
         'disabled', disabled,
         'gap', JSON_OBJECT(
           'id', gaps.id, 
-          'rowNumber', gaps.gapNumber, 
+          'gapNumber', gaps.gapNumber, 
           'spots', gaps.spots,
           'row', JSON_OBJECT(
             'id', whRows.id, 
@@ -67,7 +67,7 @@ const getSpot = async (id: string): Promise<Spot> => {
         'disabled', disabled,
         'gap', JSON_OBJECT(
           'id', gaps.id, 
-          'rowNumber', gaps.gapNumber, 
+          'gapNumber', gaps.gapNumber, 
           'spots', gaps.spots,
           'row', JSON_OBJECT(
             'id', whRows.id, 
@@ -123,7 +123,7 @@ const getSpotsByProductCode = async (code: string): Promise<Spot[]> => {
         'disabled', disabled,
         'gap', JSON_OBJECT(
           'id', gaps.id, 
-          'rowNumber', gaps.gapNumber, 
+          'gapNumber', gaps.gapNumber, 
           'spots', gaps.spots,
           'row', JSON_OBJECT(
             'id', whRows.id, 
@@ -147,7 +147,7 @@ const getSpotsByProductCode = async (code: string): Promise<Spot[]> => {
     FROM spots
     LEFT JOIN gaps ON spots.gapId = gaps.id
     LEFT JOIN whrows ON gaps.rowId = whrows.id
-    LEFT JOIN pallets ON spots.id = pallets.spotsId
+    LEFT JOIN pallets ON spots.id = pallets.spotId
     LEFT JOIN palletProducts ON pallets.id = palletProducts.palletId
     LEFT JOIN products ON palletProducts.productId = products.id
     WHERE products.code = ?
