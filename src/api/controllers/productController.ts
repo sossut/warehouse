@@ -105,7 +105,7 @@ const productPut = async (
 
       throw new CustomError(messages, 400);
     }
-
+    req.body.updatedAt = new Date();
     const product = req.body;
     const result = await putProduct(product, parseInt(req.params.id));
     if (result) {
