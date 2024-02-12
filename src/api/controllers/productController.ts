@@ -5,7 +5,8 @@ import {
   getProduct,
   postProduct,
   putProduct,
-  deleteProduct
+  deleteProduct,
+  getProductByCode
 } from '../models/productModel';
 
 import { Request, Response, NextFunction } from 'express';
@@ -34,6 +35,19 @@ const productGet = async (
 ) => {
   try {
     const product = await getProduct(req.params.id);
+    res.json(product);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const productGetByCode = async (
+  req: Request<{ code: string }, {}, {}>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const product = await getProductByCode(req.params.code);
     res.json(product);
   } catch (error) {
     next(error);
@@ -138,4 +152,11 @@ const productDelete = async (
   }
 };
 
-export { productListGet, productGet, productPost, productPut, productDelete };
+export {
+  productListGet,
+  productGet,
+  productGetByCode,
+  productPost,
+  productPut,
+  productDelete
+};

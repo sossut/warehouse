@@ -34,6 +34,19 @@ const getProduct = async (id: string): Promise<Product> => {
   return rows[0];
 };
 
+const getProductByCode = async (code: string): Promise<Product> => {
+  const [rows] = await promisePool.execute<GetProduct[]>(
+    `SELECT *
+    FROM products
+    WHERE code = ?`,
+    [code]
+  );
+  if (rows.length === 0) {
+    throw new CustomError('Product not found', 404);
+  }
+  return rows[0];
+};
+
 const postProduct = async (product: PostProduct) => {
   const [headers] = await promisePool.execute<ResultSetHeader>(
     `INSERT INTO products (name, code, weight, quantityOptionId)
@@ -69,4 +82,11 @@ const deleteProduct = async (id: number): Promise<boolean> => {
   return true;
 };
 
-export { getAllProducts, getProduct, postProduct, putProduct, deleteProduct };
+export {
+  getAllProducts,
+  getProduct,
+  getProductByCode,
+  postProduct,
+  putProduct,
+  deleteProduct
+};
