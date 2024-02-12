@@ -1,5 +1,6 @@
 import { RowDataPacket } from 'mysql2';
 import { QuantityOption } from './QuantityOption';
+import { ProductSubCategory } from './ProductSubCategory';
 
 interface Product {
   id: number;
@@ -8,6 +9,10 @@ interface Product {
   weight: number;
   quantity: number;
   quantityOptionId: number | QuantityOption;
+  price: number;
+  productSubCategoryId: number | ProductSubCategory;
+  updatedAt: Date;
+  productCategoryId: number | ProductSubCategory;
 }
 
 interface GetProduct extends RowDataPacket, Product {}
