@@ -73,6 +73,7 @@ const productPost = async (
 
       throw new CustomError(messages, 400);
     }
+    req.body.updatedAt = new Date();
     const result = await postProduct(req.body);
     if (result) {
       const message: MessageResponse = {
