@@ -1,6 +1,7 @@
 import { RowDataPacket } from 'mysql2';
 import { OutDocket } from './OutDocket';
 import { User } from './User';
+import { Client } from './Client';
 
 interface BackOrderOutDocket {
   id: number;
@@ -8,6 +9,7 @@ interface BackOrderOutDocket {
   createdAt: Date;
   updatedAt: Date;
   userId: number | User;
+  clintId: number | Client;
   status: 'open' | 'closed';
   departureAt: Date | null;
   transportOptionId: number;

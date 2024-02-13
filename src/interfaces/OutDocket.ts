@@ -2,6 +2,7 @@ import { RowDataPacket } from 'mysql2';
 import { User } from './User';
 import { TransportOption } from './TransportOption';
 import { OutDocketProduct } from './OutDocketProduct';
+import { Client } from './Client';
 
 interface OutDocket {
   id: number;
@@ -9,6 +10,7 @@ interface OutDocket {
   createdAt: Date;
   updatedAt: Date;
   userId: number | User;
+  clientId: number | Client;
   status: 'open' | 'closed';
   departureAt: Date | null;
   transportOptionId: number | TransportOption;
