@@ -13,7 +13,28 @@ import {
 const getAllSentOutDockets = async (): Promise<SentOutDocket[]> => {
   const [rows] = await promisePool.execute<GetSentOoutDocket[]>(
     `SELECT 
-       * FROM SentOutDockets`
+       SentOutDockets.id, SentOutDockets.departureAt, SentOutDockets.transportOptionId, SentOutDockets.userId, SentOutDockets.docketNumber, SentOutDockets.createdAt, SentOutDockets.status, SentOutDockets.parcels,
+       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+            'id', products.id,
+            'name', products.name,
+            'code', products.code,
+            'weight', products.weight,
+            'orderedProductQuantity', SentOutDocketProducts.orderedProductQuantity,
+            'deliveredProductQuantity', SentOutDocketProducts.deliveredProductQuantity,
+            'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
+          )), ']') AS products,
+       JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
+       JSON_OBJECT(
+         'id', clients.id,
+         'name', clients.name
+         ) AS client
+         FROM SentOutDockets
+         JOIN TransportOptions ON SentOutDockets.transportOptionId = TransportOptions.id
+         JOIN clients ON SentOutDockets.clientId = clients.id
+         JOIN SentOutDocketProducts ON SentOutDockets.id = SentOutDocketProducts.SentOutDocketId
+         JOIN products ON SentOutDocketProducts.productId = products.id
+         JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+         GROUP BY SentOutDockets.id`
   );
   if (rows.length === 0) {
     throw new CustomError('No SentOutDockets found', 404);
@@ -26,8 +47,29 @@ const getAllSentOutDockets = async (): Promise<SentOutDocket[]> => {
 
 const getSentOutDocket = async (id: string): Promise<SentOutDocket> => {
   const [rows] = await promisePool.execute<GetSentOoutDocket[]>(
-    `SELECT
-      * FROM SentOutDockets WHERE id = ?`,
+    `SELECT 
+       SentOutDockets.id, SentOutDockets.departureAt, SentOutDockets.transportOptionId, SentOutDockets.userId, SentOutDockets.docketNumber, SentOutDockets.createdAt, SentOutDockets.status, SentOutDockets.parcels,
+       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+            'id', products.id,
+            'name', products.name,
+            'code', products.code,
+            'weight', products.weight,
+            'orderedProductQuantity', SentOutDocketProducts.orderedProductQuantity,
+            'deliveredProductQuantity', SentOutDocketProducts.deliveredProductQuantity,
+            'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
+          )), ']') AS products,
+       JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
+       JSON_OBJECT(
+         'id', clients.id,
+         'name', clients.name
+         ) AS client
+         FROM SentOutDockets
+         JOIN TransportOptions ON SentOutDockets.transportOptionId = TransportOptions.id
+         JOIN clients ON SentOutDockets.clientId = clients.id
+         JOIN SentOutDocketProducts ON SentOutDockets.id = SentOutDocketProducts.SentOutDocketId
+         JOIN products ON SentOutDocketProducts.productId = products.id
+         JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+         WHERE SentOutDockets.id = ?`,
     [id]
   );
   if (rows.length === 0) {
