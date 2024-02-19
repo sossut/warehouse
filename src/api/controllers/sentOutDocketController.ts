@@ -51,6 +51,19 @@ const sentOutDocketPost = async (
   next: NextFunction
 ) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => {
+          if (error.type === 'field') {
+            return `${error.msg}: ${error.path}`;
+          }
+          return error.msg;
+        })
+        .join(', ');
+      throw new CustomError(messages, 400);
+    }
     const sentOutDocket = await postSentOutDocket(req.body);
     res.json(sentOutDocket);
   } catch (error) {
@@ -64,6 +77,19 @@ const sentOutDocketPut = async (
   next: NextFunction
 ) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => {
+          if (error.type === 'field') {
+            return `${error.msg}: ${error.path}`;
+          }
+          return error.msg;
+        })
+        .join(', ');
+      throw new CustomError(messages, 400);
+    }
     const sentOutDocket = await putSentOutDocket(req.params.id, req.body);
     res.json(sentOutDocket);
   } catch (error) {
@@ -77,6 +103,19 @@ const sentOutDocketDelete = async (
   next: NextFunction
 ) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      const messages = errors
+        .array()
+        .map((error) => {
+          if (error.type === 'field') {
+            return `${error.msg}: ${error.path}`;
+          }
+          return error.msg;
+        })
+        .join(', ');
+      throw new CustomError(messages, 400);
+    }
     const sentOutDocket = await deleteSentOutDocket(req.params.id);
     res.json(sentOutDocket);
   } catch (error) {

@@ -20,7 +20,7 @@ import {
   postOutDocketProduct
 } from '../models/outDocketProductModel';
 
-const OutDocketListGet = async (
+const outDocketListGet = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -33,7 +33,7 @@ const OutDocketListGet = async (
   }
 };
 
-const OutDocketGet = async (
+const outDocketGet = async (
   req: Request<{ id: string }, {}, {}>,
   res: Response,
   next: NextFunction
@@ -46,7 +46,7 @@ const OutDocketGet = async (
   }
 };
 
-const OutDocketPost = async (
+const outDocketPost = async (
   req: Request<{}, {}, PostOutDocket>,
   res: Response,
   next: NextFunction
@@ -97,7 +97,7 @@ const OutDocketPost = async (
   }
 };
 
-const OutDocketPut = async (
+const outDocketPut = async (
   req: Request<{ id: string }, {}, PutOutDocket>,
   res: Response,
   next: NextFunction
@@ -153,7 +153,7 @@ const OutDocketPut = async (
   }
 };
 
-const OutDocketDelete = async (
+const outDocketDelete = async (
   req: Request<{ id: string }, {}, {}>,
   res: Response,
   next: NextFunction
@@ -174,9 +174,9 @@ const OutDocketDelete = async (
 };
 
 export {
-  OutDocketListGet,
-  OutDocketGet,
-  OutDocketPost,
-  OutDocketPut,
-  OutDocketDelete
+  outDocketListGet,
+  outDocketGet,
+  outDocketPost,
+  outDocketPut,
+  outDocketDelete
 };
