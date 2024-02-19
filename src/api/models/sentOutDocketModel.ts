@@ -82,8 +82,9 @@ const postSentOutDocket = async (
   sentOutDocket: PostSentOutDocket
 ): Promise<ResultSetHeader> => {
   const [result] = await promisePool.execute<ResultSetHeader>(
-    'INSERT INTO SentOutDockets (docketId, transportOptionId, userId, parcels, status) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO SentOutDockets (departureAt, docketId, transportOptionId, userId, parcels, status) VALUES (?, ?, ?, ?, ?)',
     [
+      sentOutDocket.departureAt,
       sentOutDocket.docketId,
       sentOutDocket.transportOptionId,
       sentOutDocket.userId,

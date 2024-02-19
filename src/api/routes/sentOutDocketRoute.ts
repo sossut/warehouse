@@ -17,10 +17,9 @@ router
   .get(passport.authenticate('jwt', { session: false }), sentOutDocketListGet)
   .post(
     body('departureAt').isDate().optional().escape(),
+    body('parcels').isNumeric().notEmpty().escape(),
     body('transportOptionId').isNumeric().optional().escape(),
-    body('clientId').isNumeric().optional().escape(),
-    body('filename').isString().optional().escape(),
-    body('docketNumber').isString().optional().escape(),
+    body('docketId').isNumeric().notEmpty().escape(),
     passport.authenticate('jwt', { session: false }),
     sentOutDocketPost
   );
