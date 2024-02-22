@@ -12,13 +12,13 @@ import quantityOptionRoute from './routes/quantityOptionRoute';
 import transportOptionRoute from './routes/transportOptionRoute';
 import OutDocketRoute from './routes/outDocketRoute';
 import clientRoute from './routes/clientRoute';
-
+import sentOutDocketRoute from './routes/sentOutDocketRoute';
 const router = express.Router();
 
 router.get<{}, MessageResponse>('/', (req, res) => {
   res.json({
     message:
-      'api/v1/ - user, product, auth, row, gap, spot, pallet, quantity-option, transport-option, OutDocket, client'
+      'api/v1/ - user, product, auth, row, gap, spot, pallet, quantity-option, transport-option, OutDocket, client, sent-outdocket'
   });
 });
 
@@ -33,5 +33,6 @@ router.use('/quantity-option', quantityOptionRoute);
 router.use('/transport-option', transportOptionRoute);
 router.use('/outdocket', OutDocketRoute);
 router.use('/client', clientRoute);
+router.use('/sent-outdocket', sentOutDocketRoute);
 
 export default router;

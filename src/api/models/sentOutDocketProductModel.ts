@@ -43,10 +43,19 @@ const getSentOutDocketProduct = async (
 const postSentOutDocketProduct = async (
   sentOutDocketProduct: PostSentOutDocketProduct
 ): Promise<ResultSetHeader> => {
-  const [result] = await promisePool.execute<ResultSetHeader>(
-    'INSERT INTO SentOutDocketProducts SET ?',
-    [sentOutDocketProduct]
+  console.log('Sent Out Product Post', sentOutDocketProduct);
+  const sql = promisePool.format(
+    `INSERT INTO SentOutDocketProducts (sentOutDocketId, productId, orderedProductQuantity, deliveredProductQuantity)
+    VALUES (?, ?, ?, ?)`,
+    [
+      sentOutDocketProduct.sentOutDocketId,
+      sentOutDocketProduct.productId,
+      sentOutDocketProduct.orderedProductQuantity,
+      sentOutDocketProduct.deliveredProductQuantity
+    ]
   );
+  console.log('sql', sql);
+  const [result] = await promisePool.execute<ResultSetHeader>(sql);
   return result;
 };
 

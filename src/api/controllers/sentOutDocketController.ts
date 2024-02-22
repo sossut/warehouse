@@ -12,6 +12,14 @@ import {
   PostSentOutDocket,
   PutSentOutDocket
 } from '../../interfaces/SentOutDocket';
+import { postSentOutDocketProduct } from '../models/sentOutDocketProductModel';
+import { SentOutDocketProduct } from '../../interfaces/SentOutDocketProduct';
+import { getProduct, putProduct } from '../models/productModel';
+import MessageResponse from '../../interfaces/MessageResponse';
+import {
+  getOutDocketProductByOutDocketIdAndProductId,
+  putOutDocketProductByOutDocketIdAndProductId
+} from '../models/outDocketProductModel';
 
 const sentOutDocketListGet = async (
   req: Request,
@@ -64,8 +72,77 @@ const sentOutDocketPost = async (
         .join(', ');
       throw new CustomError(messages, 400);
     }
+    req.body.departureAt = new Date(
+      new Date(req.body.departureAt)
+        .toISOString()
+        .slice(0, 19)
+        .replace('T', ' ')
+    );
+    if (!req.body.departureAt) {
+      req.body.departureAt = new Date();
+    }
+    req.body.userId = (req.user as any).id;
     const sentOutDocket = await postSentOutDocket(req.body);
-    res.json(sentOutDocket);
+    console.log(sentOutDocket);
+    const products = req.body.products;
+    if (sentOutDocket) {
+      if (products) {
+        for (const product of products) {
+          let deliveredProductQuantity = product.deliveredProductQuantity;
+          if (!deliveredProductQuantity || deliveredProductQuantity < 0) {
+            deliveredProductQuantity = 0;
+          }
+          const dp: SentOutDocketProduct = {
+            sentOutDocketId: sentOutDocket,
+            productId: product.productId,
+            deliveredProductQuantity: deliveredProductQuantity,
+            orderedProductQuantity: product.orderedProductQuantity
+          };
+
+          const outDocketProduct =
+            await getOutDocketProductByOutDocketIdAndProductId(
+              req.body.docketId as number,
+              product.productId
+            );
+          dp.orderedProductQuantity = outDocketProduct.orderedProductQuantity;
+          if (
+            dp.deliveredProductQuantity +
+              outDocketProduct.deliveredProductQuantity >
+            outDocketProduct.orderedProductQuantity
+          ) {
+            dp.deliveredProductQuantity =
+              outDocketProduct.orderedProductQuantity -
+              outDocketProduct.deliveredProductQuantity;
+          }
+          await postSentOutDocketProduct(dp);
+          let delivered =
+            outDocketProduct.deliveredProductQuantity +
+            deliveredProductQuantity;
+          if (delivered > outDocketProduct.orderedProductQuantity) {
+            delivered = outDocketProduct.orderedProductQuantity;
+          }
+          if (product.productId == outDocketProduct.productId) {
+            await putOutDocketProductByOutDocketIdAndProductId(
+              { deliveredProductQuantity: delivered },
+              req.body.docketId as number,
+              product.productId
+            );
+          }
+
+          const productQuantity = await getProduct(
+            product.productId.toString()
+          );
+
+          const quantity = productQuantity.quantity - deliveredProductQuantity;
+          await putProduct({ quantity }, product.productId);
+        }
+      }
+    }
+    const message: MessageResponse = {
+      message: 'SentOutDocket created',
+      id: sentOutDocket
+    };
+    res.json(message);
   } catch (error) {
     next(error);
   }

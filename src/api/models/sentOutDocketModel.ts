@@ -78,21 +78,23 @@ const getSentOutDocket = async (id: string): Promise<SentOutDocket> => {
   return rows[0];
 };
 
-const postSentOutDocket = async (
-  sentOutDocket: PostSentOutDocket
-): Promise<ResultSetHeader> => {
+const postSentOutDocket = async (sentOutDocket: PostSentOutDocket) => {
+  console.log(sentOutDocket);
   const [result] = await promisePool.execute<ResultSetHeader>(
-    'INSERT INTO SentOutDockets (departureAt, docketId, transportOptionId, userId, parcels, status) VALUES (?, ?, ?, ?, ?)',
+    'INSERT INTO SentOutDockets (departureAt, docketId, transportOptionId, userId, parcels) VALUES (?, ?, ?, ?, ?)',
     [
       sentOutDocket.departureAt,
       sentOutDocket.docketId,
       sentOutDocket.transportOptionId,
       sentOutDocket.userId,
-      sentOutDocket.parcels,
-      sentOutDocket.status
+      sentOutDocket.parcels
+      // sentOutDocket.status
     ]
   );
-  return result;
+  if (result.affectedRows === 0) {
+    throw new CustomError('SentOutDocket not posted', 404);
+  }
+  return result.insertId;
 };
 
 const putSentOutDocket = async (

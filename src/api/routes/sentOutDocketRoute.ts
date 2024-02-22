@@ -16,8 +16,18 @@ router
   .route('/')
   .get(passport.authenticate('jwt', { session: false }), sentOutDocketListGet)
   .post(
-    body('departureAt').isDate().optional().escape(),
-    body('parcels').isNumeric().notEmpty().escape(),
+    body('departureAt')
+      .custom((value) => {
+        if (!value) return true;
+        const date = Date.parse(value);
+        if (isNaN(date)) {
+          throw new Error('Invalid date format');
+        }
+        return true;
+      })
+      .optional()
+      .escape(),
+    body('parcels').isNumeric().optional().escape(),
     body('transportOptionId').isNumeric().optional().escape(),
     body('docketId').isNumeric().notEmpty().escape(),
     passport.authenticate('jwt', { session: false }),
@@ -36,3 +46,5 @@ router
     passport.authenticate('jwt', { session: false }),
     sentOutDocketDelete
   );
+
+export default router;

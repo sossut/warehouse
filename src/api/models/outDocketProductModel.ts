@@ -34,11 +34,11 @@ const getOutDocketProduct = async (id: string): Promise<OutDocketProduct> => {
   return rows[0];
 };
 
-const getOutDocketProductsIdsByOutDocketId = async (
+const getOutDocketProductsByOutDocketId = async (
   id: number
 ): Promise<OutDocketProduct[]> => {
   const [rows] = await promisePool.execute<GetOutDocketProduct[]>(
-    `SELECT id
+    `SELECT *
     FROM OutDocketProducts
     WHERE OutDocketId = ?`,
     [id]
@@ -47,6 +47,23 @@ const getOutDocketProductsIdsByOutDocketId = async (
     throw new CustomError('OutDocketProduct not found', 404);
   }
   return rows;
+};
+
+const getOutDocketProductByOutDocketIdAndProductId = async (
+  id: number,
+  productId: number
+): Promise<OutDocketProduct> => {
+  const [rows] = await promisePool.execute<GetOutDocketProduct[]>(
+    `SELECT *
+    FROM OutDocketProducts
+    WHERE OutDocketId = ?
+    AND productId = ?`,
+    [id, productId]
+  );
+  if (rows.length === 0) {
+    throw new CustomError('OutDocketProduct not found', 404);
+  }
+  return rows[0];
 };
 
 const postOutDocketProduct = async (outDocketProduct: PostOutDocketProduct) => {
@@ -75,6 +92,23 @@ const putOutDocketProduct = async (
   const sql = promisePool.format(
     'UPDATE OutDocketProducts SET ? WHERE id = ?;',
     [data, id]
+  );
+  const [headers] = await promisePool.query<ResultSetHeader>(sql);
+  if (headers.affectedRows === 0) {
+    throw new CustomError('OutDocketProduct not updated', 400);
+  }
+
+  return true;
+};
+
+const putOutDocketProductByOutDocketIdAndProductId = async (
+  data: PutOutDocketProduct,
+  OutDocketId: number,
+  productId: number
+): Promise<boolean> => {
+  const sql = promisePool.format(
+    'UPDATE OutDocketProducts SET ? WHERE OutDocketId = ? AND productId = ?;',
+    [data, OutDocketId, productId]
   );
   const [headers] = await promisePool.query<ResultSetHeader>(sql);
   if (headers.affectedRows === 0) {
@@ -116,9 +150,11 @@ const deleteOutDocketProductByOutDocketId = async (
 export {
   getAllOutDocketProducts,
   getOutDocketProduct,
-  getOutDocketProductsIdsByOutDocketId,
+  getOutDocketProductsByOutDocketId,
+  getOutDocketProductByOutDocketIdAndProductId,
   postOutDocketProduct,
   putOutDocketProduct,
+  putOutDocketProductByOutDocketIdAndProductId,
   deleteOutDocketProduct,
   deleteOutDocketProductByOutDocketId
 };

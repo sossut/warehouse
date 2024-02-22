@@ -1,10 +1,10 @@
 import { RowDataPacket } from 'mysql2';
 
 interface SentOutDocketProduct {
-  id: number;
+  id?: number;
   sentOutDocketId: number;
   productId: number;
-  orderedProductQuantity: number;
+  orderedProductQuantity?: number;
   deliveredProductQuantity: number;
 }
 
