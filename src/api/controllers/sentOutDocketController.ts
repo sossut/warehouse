@@ -20,6 +20,7 @@ import {
   getOutDocketProductByOutDocketIdAndProductId,
   putOutDocketProductByOutDocketIdAndProductId
 } from '../models/outDocketProductModel';
+import { putOutDocket } from '../models/outDocketModel';
 
 const sentOutDocketListGet = async (
   req: Request,
@@ -87,6 +88,7 @@ const sentOutDocketPost = async (
     const products = req.body.products;
     if (sentOutDocket) {
       if (products) {
+        let allProductsDelivered = true;
         for (const product of products) {
           let deliveredProductQuantity = product.deliveredProductQuantity;
           if (!deliveredProductQuantity || deliveredProductQuantity < 0) {
@@ -107,7 +109,7 @@ const sentOutDocketPost = async (
           dp.orderedProductQuantity = outDocketProduct.orderedProductQuantity;
           if (
             dp.deliveredProductQuantity +
-              outDocketProduct.deliveredProductQuantity >
+              outDocketProduct.deliveredProductQuantity >=
             outDocketProduct.orderedProductQuantity
           ) {
             dp.deliveredProductQuantity =
@@ -118,8 +120,10 @@ const sentOutDocketPost = async (
           let delivered =
             outDocketProduct.deliveredProductQuantity +
             deliveredProductQuantity;
-          if (delivered > outDocketProduct.orderedProductQuantity) {
+          if (delivered >= outDocketProduct.orderedProductQuantity) {
             delivered = outDocketProduct.orderedProductQuantity;
+          } else {
+            allProductsDelivered = false;
           }
           if (product.productId == outDocketProduct.productId) {
             await putOutDocketProductByOutDocketIdAndProductId(
@@ -135,6 +139,12 @@ const sentOutDocketPost = async (
 
           const quantity = productQuantity.quantity - deliveredProductQuantity;
           await putProduct({ quantity }, product.productId);
+          if (allProductsDelivered) {
+            await putOutDocket(
+              { status: 'closed' },
+              req.body.docketId as number
+            );
+          }
         }
       }
     }
