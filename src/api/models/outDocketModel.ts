@@ -50,26 +50,27 @@ const getAllOutDockets = async (): Promise<OutDocket[]> => {
 
 const getOutDocket = async (id: string): Promise<OutDocket> => {
   const [rows] = await promisePool.execute<GetOutDocket[]>(
-    `SELECT
-      OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
-      JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
+    `SELECT 
+       OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
+       JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
           'name', products.name,
           'code', products.code,
           'weight', products.weight,
-          'orderedQuantity', OutDocketProducts.orderedProductQuantity,
-          'deliveredQuantity', OutDocketProducts.deliveredProductQuantity,
-          'quantityOptionId', products.quantityOptionId
+          'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
+          'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
+          'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
         )), ']') AS products,
       JSON_OBJECT(
         'id', clients.id,
         'name', clients.name
       ) AS client
     FROM OutDockets
-    JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
     JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
+    JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
     JOIN products ON OutDocketProducts.productId = products.id
+    JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
     JOIN clients ON OutDockets.clientId = clients.id
     WHERE OutDockets.id = ?`,
     [id]
@@ -119,26 +120,27 @@ const putOutDocket = async (
   }
 
   const selectSql = promisePool.format(
-    `SELECT
-      OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
-      JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
+    `SELECT 
+       OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
+       JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
           'name', products.name,
           'code', products.code,
           'weight', products.weight,
-          'orderedQuantity', OutDocketProducts.orderedProductQuantity,
-          'deliveredQuantity', OutDocketProducts.deliveredProductQuantity,
-          'quantityOptionId', products.quantityOptionId
+          'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
+          'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
+          'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
         )), ']') AS products,
       JSON_OBJECT(
         'id', clients.id,
         'name', clients.name
       ) AS client
     FROM OutDockets
-    JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
     JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
+    JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
     JOIN products ON OutDocketProducts.productId = products.id
+    JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
     JOIN clients ON OutDockets.clientId = clients.id
     WHERE OutDockets.id = ?`,
     [id]
