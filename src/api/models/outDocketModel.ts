@@ -13,7 +13,7 @@ import {
 const getAllOutDockets = async (): Promise<OutDocket[]> => {
   const [rows] = await promisePool.execute<GetOutDocket[]>(
     `SELECT 
-       OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status,
+       OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
        JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
@@ -51,7 +51,7 @@ const getAllOutDockets = async (): Promise<OutDocket[]> => {
 const getOutDocket = async (id: string): Promise<OutDocket> => {
   const [rows] = await promisePool.execute<GetOutDocket[]>(
     `SELECT
-      OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status,
+      OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
       JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
           'id', products.id,
@@ -108,7 +108,7 @@ const postOutDocket = async (outDocket: PostOutDocket) => {
 const putOutDocket = async (
   data: PutOutDocket,
   id: number
-): Promise<boolean> => {
+): Promise<GetOutDocket> => {
   const sql = promisePool.format('UPDATE OutDockets SET ? WHERE id = ?;', [
     data,
     id
@@ -118,7 +118,42 @@ const putOutDocket = async (
     throw new CustomError('OutDocket not updated', 400);
   }
 
-  return true;
+  const selectSql = promisePool.format(
+    `SELECT
+      OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
+      JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
+      CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+          'id', products.id,
+          'name', products.name,
+          'code', products.code,
+          'weight', products.weight,
+          'orderedQuantity', OutDocketProducts.orderedProductQuantity,
+          'deliveredQuantity', OutDocketProducts.deliveredProductQuantity,
+          'quantityOptionId', products.quantityOptionId
+        )), ']') AS products,
+      JSON_OBJECT(
+        'id', clients.id,
+        'name', clients.name
+      ) AS client
+    FROM OutDockets
+    JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
+    JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
+    JOIN products ON OutDocketProducts.productId = products.id
+    JOIN clients ON OutDockets.clientId = clients.id
+    WHERE OutDockets.id = ?`,
+    [id]
+  );
+  const [rows] = await promisePool.query<GetOutDocket[]>(selectSql);
+  if (rows.length === 0) {
+    throw new CustomError('OutDocket not found', 404);
+  }
+  const OutDockets = rows.map((row) => ({
+    ...row,
+    products: JSON.parse(row.products?.toString() || '{}'),
+    client: JSON.parse(row.client?.toString() || '{}'),
+    transportOption: JSON.parse(row.transportOption?.toString() || '{}')
+  }));
+  return OutDockets[0];
 };
 
 const deleteOutDocket = async (id: number): Promise<boolean> => {

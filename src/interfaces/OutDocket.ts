@@ -8,7 +8,7 @@ interface OutDocket {
   id: number;
   docketNumber: string;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date | null | undefined;
   userId: number | User;
   clientId: number | Client;
   status: 'open' | 'closed';

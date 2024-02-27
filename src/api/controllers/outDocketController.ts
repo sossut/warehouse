@@ -128,26 +128,41 @@ const outDocketPut = async (
         if (!quantity) {
           quantity = 0;
         }
+        let id = product.id as number;
+        if (!id) {
+          id = product.productId as number;
+        }
+        console.log('product', product);
         const dp: OutDocketProduct = {
           outDocketId: parseInt(req.params.id),
-          productId: product.productId,
+          productId: id,
           orderedProductQuantity: quantity,
           deliveredProductQuantity: product.deliveredProductQuantity
         };
+        console.log('dp', dp);
         await postOutDocketProduct(dp);
       }
     }
     delete req.body.products;
     req.body.updatedAt = new Date();
+    if (req.body.departureAt !== null && req.body.departureAt !== undefined) {
+      req.body.departureAt = new Date(
+        new Date(req.body.departureAt)
+          .toISOString()
+          .slice(0, 19)
+          .replace('T', ' ')
+      );
+    }
+
     const result = await putOutDocket(req.body, parseInt(req.params.id));
     if (!result) {
       throw new CustomError('OutDocket not updated', 400);
     }
-    const message: MessageResponse = {
-      message: 'OutDocket updated',
-      id: parseInt(req.params.id)
-    };
-    res.json(message);
+    // const message: MessageResponse = {
+    //   message: 'OutDocket updated',
+    //   id: parseInt(req.params.id)
+    // };
+    res.json(result);
   } catch (error) {
     next(error);
   }
