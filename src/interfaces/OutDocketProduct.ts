@@ -8,6 +8,7 @@ interface OutDocketProduct {
   productId: number | Product;
   orderedProductQuantity: number;
   deliveredProductQuantity: number;
+  outDocketProductId?: number;
 }
 
 interface GetOutDocketProduct extends RowDataPacket, OutDocketProduct {}

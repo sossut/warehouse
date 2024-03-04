@@ -6,6 +6,7 @@ interface SentOutDocketProduct {
   productId: number;
   orderedProductQuantity?: number;
   deliveredProductQuantity: number;
+  outDocketProductId?: number;
 }
 
 interface GetSentOutDocketProduct extends RowDataPacket, SentOutDocketProduct {}

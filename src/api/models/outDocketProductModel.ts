@@ -53,13 +53,15 @@ const getOutDocketProductByOutDocketIdAndProductId = async (
   id: number,
   productId: number
 ): Promise<OutDocketProduct> => {
-  const [rows] = await promisePool.execute<GetOutDocketProduct[]>(
+  const sql = promisePool.format(
     `SELECT *
     FROM OutDocketProducts
     WHERE OutDocketId = ?
     AND productId = ?`,
     [id, productId]
   );
+  console.log(sql);
+  const [rows] = await promisePool.execute<GetOutDocketProduct[]>(sql);
   if (rows.length === 0) {
     throw new CustomError('OutDocketProduct not found', 404);
   }

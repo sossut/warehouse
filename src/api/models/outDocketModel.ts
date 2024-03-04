@@ -20,6 +20,7 @@ const getAllOutDockets = async (): Promise<OutDocket[]> => {
           'name', products.name,
           'code', products.code,
           'weight', products.weight,
+          'outDocketProductId', OutDocketProducts.id,
           'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
           'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
           'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
@@ -29,11 +30,11 @@ const getAllOutDockets = async (): Promise<OutDocket[]> => {
         'name', clients.name
       ) AS client
     FROM OutDockets
-    JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
-    JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
-    JOIN products ON OutDocketProducts.productId = products.id
-    JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
-    JOIN clients ON OutDockets.clientId = clients.id
+    LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
+    LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
+    LEFT JOIN products ON OutDocketProducts.productId = products.id
+    LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+    LEFT JOIN clients ON OutDockets.clientId = clients.id
     GROUP BY OutDockets.id`
   );
   if (rows.length === 0) {
@@ -58,6 +59,7 @@ const getOutDocket = async (id: string): Promise<OutDocket> => {
           'name', products.name,
           'code', products.code,
           'weight', products.weight,
+          'outDocketProductId', OutDocketProducts.id,
           'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
           'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
           'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
@@ -67,11 +69,11 @@ const getOutDocket = async (id: string): Promise<OutDocket> => {
         'name', clients.name
       ) AS client
     FROM OutDockets
-    JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
-    JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
-    JOIN products ON OutDocketProducts.productId = products.id
-    JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
-    JOIN clients ON OutDockets.clientId = clients.id
+    LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
+    LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
+    LEFT JOIN products ON OutDocketProducts.productId = products.id
+    LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+    LEFT JOIN clients ON OutDockets.clientId = clients.id
     WHERE OutDockets.id = ?`,
     [id]
   );
@@ -128,6 +130,7 @@ const putOutDocket = async (
           'name', products.name,
           'code', products.code,
           'weight', products.weight,
+          'outDocketProductId', OutDocketProducts.id,
           'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
           'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
           'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
@@ -137,11 +140,11 @@ const putOutDocket = async (
         'name', clients.name
       ) AS client
     FROM OutDockets
-    JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
-    JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
-    JOIN products ON OutDocketProducts.productId = products.id
-    JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
-    JOIN clients ON OutDockets.clientId = clients.id
+    LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
+    LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
+    LEFT JOIN products ON OutDocketProducts.productId = products.id
+    LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+    LEFT JOIN clients ON OutDockets.clientId = clients.id
     WHERE OutDockets.id = ?`,
     [id]
   );

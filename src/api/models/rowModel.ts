@@ -6,28 +6,6 @@ import { ResultSetHeader } from 'mysql2';
 import { Row, GetRow, PostRow, PutRow } from '../../interfaces/Row';
 import { GetGap } from '../../interfaces/Gap';
 import { GetSpot } from '../../interfaces/Spot';
-import { GetPallet } from '../../interfaces/Pallet';
-import { GetProduct } from '../../interfaces/Product';
-import { GetPalletProduct } from '../../interfaces/PalletProduct';
-
-const parseNestedJSON = (obj: any): any => {
-  if (typeof obj !== 'object') {
-    return obj;
-  }
-  for (const key in obj) {
-    if (typeof obj[key] === 'string') {
-      try {
-        obj[key] = JSON.parse(obj[key]);
-      } catch (e) {
-        // not a JSON string
-      }
-    }
-    if (typeof obj[key] === 'object') {
-      obj[key] = parseNestedJSON(obj[key]);
-    }
-  }
-  return obj;
-};
 
 const getAllRows = async (): Promise<Row[]> => {
   const [rows] = await promisePool.execute<GetRow[]>(
@@ -58,29 +36,6 @@ const getAllRowsGapsSpots = async (): Promise<Row[]> => {
             'SELECT id, spotNumber FROM spots WHERE gapId = ?',
             [gap.id]
           );
-
-          // For each spot, get the pallet and its products
-          // const spotsWithPallets = await Promise.all(
-          //   spots.map(async (spot) => {
-          //     const [pallets] = await promisePool.execute<GetPallet[]>(
-          //       'SELECT id, createdAt, updatedAt FROM pallets WHERE spotId = ?',
-          //       [spot.id]
-          //     );
-          //     const pallet = pallets[0];
-
-          //     if (pallet) {
-          //       const [products] = await promisePool.execute<
-          //         GetPalletProduct[]
-          //       >(
-          //         'SELECT products.id, products.name, products.code, products.weight, palletProducts.quantity, palletProducts.palletId, palletProducts.productId FROM palletProducts LEFT JOIN products ON palletProducts.productId = products.id WHERE palletProducts.palletId = ?',
-          //         [pallet.id]
-          //       );
-          //       pallet.products = products;
-          //     }
-
-          //     return { ...spot };
-          //   })
-          // );
 
           return { ...gap, data: spots };
         })

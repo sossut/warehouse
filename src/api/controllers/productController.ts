@@ -14,6 +14,10 @@ import { PostProduct, PutProduct } from '../../interfaces/Product';
 
 import CustomError from '../../classes/CustomError';
 import MessageResponse from '../../interfaces/MessageResponse';
+import {
+  getProductHistoryByProductId,
+  postProductHistoryManual
+} from '../models/productHistoryModel';
 
 const productListGet = async (
   req: Request,
@@ -106,10 +110,27 @@ const productPut = async (
 
       throw new CustomError(messages, 400);
     }
+
     req.body.updatedAt = new Date();
     const product = req.body;
     const result = await putProduct(product, parseInt(req.params.id));
     if (result) {
+      const oldProduct = await getProduct(req.params.id);
+      const oldQuantity = oldProduct.quantity;
+      const newQuantity = req.body.quantity;
+      if (newQuantity && oldQuantity < newQuantity) {
+        await postProductHistoryManual({
+          productId: parseInt(req.params.id),
+          quantity: newQuantity - oldQuantity,
+          manual: 'yes'
+        });
+      } else if (newQuantity && oldQuantity > newQuantity) {
+        await postProductHistoryManual({
+          productId: parseInt(req.params.id),
+          quantity: oldQuantity - newQuantity,
+          manual: 'yes'
+        });
+      }
       const message: MessageResponse = {
         message: 'Product updated',
         id: parseInt(req.params.id)
@@ -153,11 +174,25 @@ const productDelete = async (
   }
 };
 
+const productHistoryGet = async (
+  req: Request<{ id: string }, {}, {}>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const product = await getProductHistoryByProductId(parseInt(req.params.id));
+    res.json(product);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export {
   productListGet,
   productGet,
   productGetByCode,
   productPost,
   productPut,
-  productDelete
+  productDelete,
+  productHistoryGet
 };

@@ -6,7 +6,8 @@ import {
   productPost,
   productPut,
   productDelete,
-  productGetByCode
+  productGetByCode,
+  productHistoryGet
 } from '../controllers/productController';
 
 import { body, param } from 'express-validator';
@@ -31,6 +32,14 @@ router
     param('code').isString().notEmpty().escape(),
     passport.authenticate('jwt', { session: false }),
     productGetByCode
+  );
+
+router
+  .route('/history/:id')
+  .get(
+    param('id').isNumeric(),
+    passport.authenticate('jwt', { session: false }),
+    productHistoryGet
   );
 
 router

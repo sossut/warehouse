@@ -16,9 +16,12 @@ import MessageResponse from '../../interfaces/MessageResponse';
 import { User } from '../../interfaces/User';
 import { OutDocketProduct } from '../../interfaces/OutDocketProduct';
 import {
-  deleteOutDocketProductByOutDocketId,
-  postOutDocketProduct
+  getOutDocketProduct,
+  postOutDocketProduct,
+  putOutDocketProduct
 } from '../models/outDocketProductModel';
+import { postProductHistoryLeaveManual } from '../models/productHistoryModel';
+import { getProduct, putProduct } from '../models/productModel';
 
 const outDocketListGet = async (
   req: Request,
@@ -119,11 +122,8 @@ const outDocketPut = async (
     const products = req.body.products;
 
     if (products) {
-      try {
-        await deleteOutDocketProductByOutDocketId(parseInt(req.params.id));
-      } catch (error) {}
-
       for (const product of products) {
+        console.log({ product });
         let quantity = product.orderedProductQuantity;
         if (!quantity) {
           quantity = 0;
@@ -132,15 +132,69 @@ const outDocketPut = async (
         if (!id) {
           id = product.productId as number;
         }
-        console.log('product', product);
-        const dp: OutDocketProduct = {
-          outDocketId: parseInt(req.params.id),
-          productId: id,
-          orderedProductQuantity: quantity,
-          deliveredProductQuantity: product.deliveredProductQuantity
-        };
-        console.log('dp', dp);
-        await postOutDocketProduct(dp);
+        try {
+          console.log({ productid: product.id }, { docketid: req.params.id });
+          if (!product.outDocketProductId) {
+            throw new CustomError('OutDocketProduct not found', 404);
+          }
+          const oldOutDocketProduct = await getOutDocketProduct(
+            product.outDocketProductId?.toString()
+          );
+          try {
+            const oldQuantity = oldOutDocketProduct.deliveredProductQuantity;
+            const newQuantity = product.deliveredProductQuantity;
+            const p = await getProduct(id.toString());
+            const oldProductQuantity = p.quantity;
+            console.log(
+              { oldQuantity },
+              { newQuantity },
+              { oldProductQuantity },
+              { id }
+            );
+            if (newQuantity && oldQuantity < newQuantity) {
+              await postProductHistoryLeaveManual({
+                productId: id,
+                quantity: -(newQuantity - oldQuantity),
+                outDocketId: parseInt(req.params.id),
+                manual: 'yes'
+              });
+              await putProduct(
+                { quantity: oldProductQuantity - (newQuantity - oldQuantity) },
+                id
+              );
+            } else if (newQuantity && oldQuantity > newQuantity) {
+              await postProductHistoryLeaveManual({
+                productId: id,
+                quantity: oldQuantity - newQuantity,
+                outDocketId: parseInt(req.params.id),
+                manual: 'yes'
+              });
+              await putProduct(
+                { quantity: oldProductQuantity + (oldQuantity - newQuantity) },
+                id
+              );
+            }
+          } catch (error) {
+            console.log(error);
+          }
+          const dp: OutDocketProduct = {
+            outDocketId: parseInt(req.params.id),
+            productId: id,
+            orderedProductQuantity: quantity,
+            deliveredProductQuantity: product.deliveredProductQuantity
+          };
+          if (oldOutDocketProduct.id) {
+            await putOutDocketProduct(dp, oldOutDocketProduct.id);
+          }
+        } catch (error) {
+          const dp: OutDocketProduct = {
+            outDocketId: parseInt(req.params.id),
+            productId: id,
+            orderedProductQuantity: quantity,
+            deliveredProductQuantity: product.deliveredProductQuantity
+          };
+          await postOutDocketProduct(dp);
+        }
       }
     }
     delete req.body.products;
@@ -174,6 +228,17 @@ const outDocketDelete = async (
   next: NextFunction
 ) => {
   try {
+    const outDocket = await getOutDocket(req.params.id);
+
+    if (outDocket.products && outDocket.products.length > 0) {
+      for (const product of outDocket.products) {
+        const prod = await getProduct(product.id?.toString() as string);
+        await putProduct(
+          { quantity: prod.quantity + product.deliveredProductQuantity },
+          product.id as number
+        );
+      }
+    }
     const result = await deleteOutDocket(parseInt(req.params.id));
     if (!result) {
       throw new CustomError('OutDocket not deleted', 400);

@@ -17,11 +17,12 @@ import { SentOutDocketProduct } from '../../interfaces/SentOutDocketProduct';
 import { getProduct, putProduct } from '../models/productModel';
 import MessageResponse from '../../interfaces/MessageResponse';
 import {
-  getOutDocketProductByOutDocketIdAndProductId,
-  putOutDocketProductByOutDocketIdAndProductId
+  getOutDocketProduct,
+  postOutDocketProduct,
+  putOutDocketProduct
 } from '../models/outDocketProductModel';
 import { putOutDocket } from '../models/outDocketModel';
-
+import { postProductHistoryLeave } from '../models/productHistoryModel';
 const sentOutDocketListGet = async (
   req: Request,
   res: Response,
@@ -100,12 +101,12 @@ const sentOutDocketPost = async (
             deliveredProductQuantity: deliveredProductQuantity,
             orderedProductQuantity: product.orderedProductQuantity
           };
-
-          const outDocketProduct =
-            await getOutDocketProductByOutDocketIdAndProductId(
-              req.body.docketId as number,
-              product.productId
-            );
+          if (!product.outDocketProductId) {
+            throw new CustomError('sentOutDocketProductId not found', 404);
+          }
+          const outDocketProduct = await getOutDocketProduct(
+            product.outDocketProductId?.toString()
+          );
           dp.orderedProductQuantity = outDocketProduct.orderedProductQuantity;
           if (
             dp.deliveredProductQuantity +
@@ -125,18 +126,54 @@ const sentOutDocketPost = async (
           } else {
             allProductsDelivered = false;
           }
-          if (product.productId == outDocketProduct.productId) {
-            await putOutDocketProductByOutDocketIdAndProductId(
-              { deliveredProductQuantity: delivered },
-              req.body.docketId as number,
-              product.productId
+
+          await putOutDocketProduct(
+            { deliveredProductQuantity: delivered },
+            product.outDocketProductId
+          );
+
+          if (
+            product.deliveredProductQuantity <
+              outDocketProduct.orderedProductQuantity &&
+            product.deliveredProductQuantity !== 0
+          ) {
+            const newOrderedProductQuantityForOldOutDocketProduct =
+              product.deliveredProductQuantity;
+            const newOrderedProductQuantityForNewOutDocketProduct =
+              outDocketProduct.orderedProductQuantity -
+              product.deliveredProductQuantity;
+            await putOutDocketProduct(
+              {
+                orderedProductQuantity:
+                  newOrderedProductQuantityForOldOutDocketProduct,
+                deliveredProductQuantity: product.deliveredProductQuantity
+              },
+              product.outDocketProductId
             );
+
+            await postOutDocketProduct({
+              productId: product.productId,
+              outDocketId: req.body.docketId as number,
+              orderedProductQuantity:
+                newOrderedProductQuantityForNewOutDocketProduct,
+              deliveredProductQuantity: 0
+            });
           }
 
           const productQuantity = await getProduct(
             product.productId.toString()
           );
-
+          if (
+            product.deliveredProductQuantity > 0 &&
+            outDocketProduct.deliveredProductQuantity !==
+              product.deliveredProductQuantity
+          ) {
+            await postProductHistoryLeave({
+              productId: product.productId,
+              quantity: -deliveredProductQuantity,
+              outDocketId: req.body.docketId as number
+            });
+          }
           const quantity = productQuantity.quantity - deliveredProductQuantity;
           await putProduct({ quantity }, product.productId);
           if (allProductsDelivered) {

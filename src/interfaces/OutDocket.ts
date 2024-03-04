@@ -12,7 +12,7 @@ interface OutDocket {
   userId: number | User;
   clientId: number | Client;
   status: 'open' | 'closed';
-  departureAt: Date | null;
+  departureAt: Date | null | string;
   transportOptionId: number | TransportOption;
   filename: string;
   products?: OutDocketProduct[];

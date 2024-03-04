@@ -8,6 +8,8 @@ import {
 } from '../controllers/outDocketController';
 import { body, param } from 'express-validator';
 
+import dateFns from 'date-fns';
+
 import passport from 'passport';
 import multer, { FileFilterCallback } from 'multer';
 
@@ -31,7 +33,17 @@ router
   .route('/')
   .get(passport.authenticate('jwt', { session: false }), outDocketListGet)
   .post(
-    body('departureAt').isDate().optional().escape(),
+    body('departureAt')
+      .optional({ nullable: true, checkFalsy: true })
+      .custom((value) => {
+        // Try to parse the value as an ISO 8601 date
+        const parsedDate = dateFns.parseISO(value);
+        // Check if the parsed date is valid
+        return dateFns.isValid(parsedDate);
+      })
+      .withMessage('Invalid date')
+      .bail()
+      .toDate(),
     body('transportOptionId').isNumeric().optional().escape(),
     body('clientId').isNumeric().optional().escape(),
     body('filename').isString().optional().escape(),
