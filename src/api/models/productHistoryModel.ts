@@ -11,7 +11,12 @@ import {
 
 const getAllProductHistories = async (): Promise<ProductHistory[]> => {
   const [rows] = await promisePool.execute<GetProductHistory[]>(
-    'SELECT * FROM ProductHistories'
+    `SELECT ProductHistories.id, ProductHistories.productId, ProductHistories.quantity, ProductHistories.inDocketId, ProductHistories.outDocketId, ProductHistories.manual, ProductHistories.createdAt,
+    Products.name AS productName, InDockets.docketNumber AS inDocketNumber, OutDockets.docketNumber AS outDocketNumber
+    FROM ProductHistories
+    JOIN Products ON ProductHistories.productId = Products.id
+    LEFT JOIN InDockets ON ProductHistories.inDocketId = InDockets.id
+    LEFT JOIN OutDockets ON ProductHistories.outDocketId = OutDockets.id`
   );
   if (rows.length === 0) {
     throw new CustomError('No ProductHistories found', 404);
@@ -21,8 +26,12 @@ const getAllProductHistories = async (): Promise<ProductHistory[]> => {
 
 const getProductHistory = async (id: string): Promise<ProductHistory> => {
   const [rows] = await promisePool.execute<GetProductHistory[]>(
-    `SELECT *
+    `SELECT ProductHistories.id, ProductHistories.productId, ProductHistories.quantity, ProductHistories.inDocketId, ProductHistories.outDocketId, ProductHistories.manual, ProductHistories.createdAt,
+    Products.name AS productName, InDockets.docketNumber AS inDocketNumber, OutDockets.docketNumber AS outDocketNumber
     FROM ProductHistories
+    JOIN Products ON ProductHistories.productId = Products.id
+    LEFT JOIN InDockets ON ProductHistories.inDocketId = InDockets.id
+    LEFT JOIN OutDockets ON ProductHistories.outDocketId = OutDockets.id
     WHERE id = ?`,
     [id]
   );
@@ -36,8 +45,12 @@ const getProductHistoryByProductId = async (
   id: number
 ): Promise<ProductHistory[]> => {
   const [rows] = await promisePool.execute<GetProductHistory[]>(
-    `SELECT *
+    `SELECT ProductHistories.id, ProductHistories.productId, ProductHistories.quantity, ProductHistories.inDocketId, ProductHistories.outDocketId, ProductHistories.manual, ProductHistories.createdAt,
+    Products.name AS productName, InDockets.docketNumber AS inDocketNumber, OutDockets.docketNumber AS outDocketNumber
     FROM ProductHistories
+    JOIN Products ON ProductHistories.productId = Products.id
+    LEFT JOIN InDockets ON ProductHistories.inDocketId = InDockets.id
+    LEFT JOIN OutDockets ON ProductHistories.outDocketId = OutDockets.id
     WHERE productId = ?`,
     [id]
   );
