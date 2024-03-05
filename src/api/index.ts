@@ -13,6 +13,7 @@ import transportOptionRoute from './routes/transportOptionRoute';
 import OutDocketRoute from './routes/outDocketRoute';
 import clientRoute from './routes/clientRoute';
 import sentOutDocketRoute from './routes/sentOutDocketRoute';
+import inDocketRoute from './routes/inDocketRoute';
 const router = express.Router();
 
 router.get<{}, MessageResponse>('/', (req, res) => {
@@ -34,5 +35,6 @@ router.use('/transport-option', transportOptionRoute);
 router.use('/outdocket', OutDocketRoute);
 router.use('/client', clientRoute);
 router.use('/sent-outdocket', sentOutDocketRoute);
+router.use('/indocket', inDocketRoute);
 
 export default router;

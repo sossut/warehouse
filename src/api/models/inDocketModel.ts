@@ -12,8 +12,27 @@ import { ResultSetHeader } from 'mysql2';
 
 const getAllInDockets = async (): Promise<InDocket[]> => {
   const [rows] = await promisePool.execute<GetInDocket[]>(
-    `SELECT *
-    FROM inDockets`
+    `SELECT InDockets.id, InDockets.docketNumber, InDockets.arrivalAt, InDockets.userId, InDockets.filename, vendorId, status, InDockets.createdAt, InDockets.updatedAt,
+    CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+      'id', products.id,
+      'name', products.name,
+      'code', products.code,
+      'weight', products.weight,
+      'inDocketProductId', InDocketProducts.id,
+      'orderedProductQuantity', InDocketProducts.orderedProductQuantity,
+      'deliveredProductQuantity', InDocketProducts.deliveredProductQuantity,
+      'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
+    )), ']') AS products,
+    JSON_OBJECT(
+      'id', vendors.id,
+      'name', vendors.name
+    ) AS vendor
+    FROM InDockets
+    LEFT JOIN InDocketProducts ON InDockets.id = InDocketProducts.inDocketId
+    LEFT JOIN products ON InDocketProducts.productId = products.id
+    LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+    LEFT JOIN vendors ON InDockets.vendorId = vendors.id
+    GROUP BY InDockets.id`
   );
   if (rows.length === 0) {
     throw new CustomError('No inDockets found', 404);
@@ -36,9 +55,14 @@ const getInDocket = async (id: string): Promise<InDocket> => {
 
 const postInDocket = async (inDocket: PostInDocket) => {
   const [headers] = await promisePool.execute<ResultSetHeader>(
-    `INSERT INTO inDockets (arrivalAt, transportOptionId, userId)
+    `INSERT INTO inDockets (docketNumber, arrivalAt, transportOptionId, userId)
     VALUES (?, ?, ?, ?)`,
-    [inDocket.arrivedAt, inDocket.userId, inDocket.vendorId, inDocket.filename]
+    [
+      inDocket.docketNumber,
+      inDocket.arrivedAt,
+      inDocket.userId,
+      inDocket.vendorId
+    ]
   );
   if (headers.affectedRows === 0) {
     throw new CustomError('InDocket not created', 400);
