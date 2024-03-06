@@ -14,6 +14,7 @@ import OutDocketRoute from './routes/outDocketRoute';
 import clientRoute from './routes/clientRoute';
 import sentOutDocketRoute from './routes/sentOutDocketRoute';
 import inDocketRoute from './routes/inDocketRoute';
+import vendorRoute from './routes/vendorRoute';
 const router = express.Router();
 
 router.get<{}, MessageResponse>('/', (req, res) => {
@@ -36,5 +37,6 @@ router.use('/outdocket', OutDocketRoute);
 router.use('/client', clientRoute);
 router.use('/sent-outdocket', sentOutDocketRoute);
 router.use('/indocket', inDocketRoute);
+router.use('/vendor', vendorRoute);
 
 export default router;

@@ -20,7 +20,7 @@ const getAllInDockets = async (): Promise<InDocket[]> => {
       'weight', products.weight,
       'inDocketProductId', InDocketProducts.id,
       'orderedProductQuantity', InDocketProducts.orderedProductQuantity,
-      'deliveredProductQuantity', InDocketProducts.deliveredProductQuantity,
+      'receivedProductQuantity', InDocketProducts.receivedProductQuantity,
       'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
     )), ']') AS products,
     JSON_OBJECT(
@@ -42,9 +42,27 @@ const getAllInDockets = async (): Promise<InDocket[]> => {
 
 const getInDocket = async (id: string): Promise<InDocket> => {
   const [rows] = await promisePool.execute<GetInDocket[]>(
-    `SELECT *
-    FROM inDockets
-    WHERE id = ?`,
+    `SELECT InDockets.id, InDockets.docketNumber, InDockets.arrivalAt, InDockets.userId, InDockets.filename, vendorId, status, InDockets.createdAt, InDockets.updatedAt,
+    CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+      'id', products.id,
+      'name', products.name,
+      'code', products.code,
+      'weight', products.weight,
+      'inDocketProductId', InDocketProducts.id,
+      'orderedProductQuantity', InDocketProducts.orderedProductQuantity,
+      'receivedProductQuantity', InDocketProducts.receivedProductQuantity,
+      'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
+    )), ']') AS products,
+    JSON_OBJECT(
+      'id', vendors.id,
+      'name', vendors.name
+    ) AS vendor
+    FROM InDockets
+    LEFT JOIN InDocketProducts ON InDockets.id = InDocketProducts.inDocketId
+    LEFT JOIN products ON InDocketProducts.productId = products.id
+    LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+    LEFT JOIN vendors ON InDockets.vendorId = vendors.id
+    WHERE inDockets.id = ?`,
     [id]
   );
   if (rows.length === 0) {
