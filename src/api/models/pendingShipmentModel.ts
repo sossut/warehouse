@@ -10,10 +10,11 @@ import {
 
 const getAllPendingShipments = async (): Promise<PendingShipment[]> => {
   const [rows] = await promisePool.execute<GetPendingShipment[]>(
-    `SELECT PendingShipments.id, PendingShipments.sentOutDocketId, PendingShipments.createdAt, OutDockets.id AS outDocketId, OutDockets.docketNumber
+    `SELECT PendingShipments.id, PendingShipments.sentOutDocketId, PendingShipments.createdAt, OutDockets.id AS outDocketId, OutDockets.docketNumber, Clients.name AS name
     FROM PendingShipments
     JOIN SentOutDockets ON PendingShipments.sentOutDocketId = SentOutDockets.id
-    JOIN OutDockets ON SentOutDockets.docketId = OutDockets.id`
+    JOIN OutDockets ON SentOutDockets.docketId = OutDockets.id
+    JOIN Clients ON OutDockets.clientId = Clients.id`
   );
   if (rows.length === 0) {
     throw new CustomError('No PendingShipments found', 404);
@@ -23,10 +24,11 @@ const getAllPendingShipments = async (): Promise<PendingShipment[]> => {
 
 const getPendingShipment = async (id: string): Promise<PendingShipment> => {
   const [rows] = await promisePool.execute<GetPendingShipment[]>(
-    `SELECT PendingShipments.id, PendingShipments.sentOutDocketId, PendingShipments.createdAt, OutDockets.id AS outDocketId, OutDockets.docketNumber
+    `SELECT PendingShipments.id, PendingShipments.sentOutDocketId, PendingShipments.createdAt, OutDockets.id AS outDocketId, OutDockets.docketNumber, Clients.name AS name
     FROM PendingShipments
     JOIN SentOutDockets ON PendingShipments.sentOutDocketId = SentOutDockets.id
     JOIN OutDockets ON SentOutDockets.docketId = OutDockets.id
+    JOIN Clients ON OutDockets.clientId = Clients.id
     WHERE PendingShipments.id = ?`,
     [id]
   );

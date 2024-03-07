@@ -14,7 +14,6 @@ const getAllSentOutDockets = async (): Promise<SentOutDocket[]> => {
   const [rows] = await promisePool.execute<GetSentOoutDocket[]>(
     `SELECT 
        SentOutDockets.id, SentOutDockets.departureAt, SentOutDockets.transportOptionId, SentOutDockets.userId,  SentOutDockets.createdAt, SentOutDockets.status, SentOutDockets.parcels,
-       OutDockets.docketNumber,
        CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
             'id', products.id,
             'name', products.name,
@@ -26,23 +25,34 @@ const getAllSentOutDockets = async (): Promise<SentOutDocket[]> => {
           )), ']') AS products,
        JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
        JSON_OBJECT(
-         'id', clients.id,
-         'name', clients.name
-         ) AS client
+         'outDocketId', OutDockets.id,
+         'docketNumber', OutDockets.docketNumber,
+         'createdAt', OutDockets.createdAt,
+          'status', OutDockets.status
+         
+         ) AS outDocket,
+          JSON_OBJECT(
+          'id', clients.id,
+          'name', clients.name
+          ) AS client
          FROM SentOutDockets
          LEFT JOIN TransportOptions ON SentOutDockets.transportOptionId = TransportOptions.id
-         LEFT JOIN clients ON SentOutDockets.clientId = clients.id
          LEFT JOIN SentOutDocketProducts ON SentOutDockets.id = SentOutDocketProducts.SentOutDocketId
          LEFT JOIN products ON SentOutDocketProducts.productId = products.id
          LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
          LEFT JOIN OutDockets ON SentOutDockets.docketId = OutDockets.id
+         LEFT JOIN clients ON OutDockets.clientId = clients.id
          GROUP BY SentOutDockets.id`
   );
   if (rows.length === 0) {
     throw new CustomError('No SentOutDockets found', 404);
   }
   const SentOutDockets = rows.map((row) => ({
-    ...row
+    ...row,
+    products: JSON.parse(row.products?.toString() || '{}'),
+    transportOption: JSON.parse(row.transportOption?.toString() || '{}'),
+    outDocket: JSON.parse(row.outDocket?.toString() || '{}'),
+    client: JSON.parse(row.client?.toString() || '{}')
   }));
   return SentOutDockets;
 };
@@ -51,7 +61,6 @@ const getSentOutDocket = async (id: string): Promise<SentOutDocket> => {
   const [rows] = await promisePool.execute<GetSentOoutDocket[]>(
     `SELECT 
        SentOutDockets.id, SentOutDockets.departureAt, SentOutDockets.transportOptionId, SentOutDockets.userId,  SentOutDockets.createdAt, SentOutDockets.status, SentOutDockets.parcels,
-       OutDockets.docketNumber,
        CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
             'id', products.id,
             'name', products.name,
@@ -63,16 +72,23 @@ const getSentOutDocket = async (id: string): Promise<SentOutDocket> => {
           )), ']') AS products,
        JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
        JSON_OBJECT(
-         'id', clients.id,
-         'name', clients.name
-         ) AS client
+         'outDocketId', OutDockets.id,
+         'docketNumber', OutDockets.docketNumber,
+         'createdAt', OutDockets.createdAt,
+          'status', OutDockets.status
+         
+         ) AS outDocket,
+          JSON_OBJECT(
+          'id', clients.id,
+          'name', clients.name
+          ) AS client
          FROM SentOutDockets
          LEFT JOIN TransportOptions ON SentOutDockets.transportOptionId = TransportOptions.id
-         LEFT JOIN clients ON SentOutDockets.clientId = clients.id
          LEFT JOIN SentOutDocketProducts ON SentOutDockets.id = SentOutDocketProducts.SentOutDocketId
          LEFT JOIN products ON SentOutDocketProducts.productId = products.id
          LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
          LEFT JOIN OutDockets ON SentOutDockets.docketId = OutDockets.id
+         LEFT JOIN clients ON OutDockets.clientId = clients.id
          WHERE SentOutDockets.id = ?`,
     [id]
   );

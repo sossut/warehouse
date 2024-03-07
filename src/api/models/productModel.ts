@@ -65,7 +65,7 @@ const postProduct = async (product: PostProduct) => {
   return headers.insertId;
 };
 
-const putProduct = async (data: PutProduct, id: number): Promise<boolean> => {
+const putProduct = async (data: PutProduct, id: number): Promise<Product> => {
   const sql = promisePool.format('UPDATE products SET ? WHERE id = ?;', [
     data,
     id
@@ -74,8 +74,9 @@ const putProduct = async (data: PutProduct, id: number): Promise<boolean> => {
   if (headers.affectedRows === 0) {
     throw new CustomError('Product not updated', 400);
   }
+  const product = await getProduct(id.toString());
 
-  return true;
+  return product;
 };
 
 const deleteProduct = async (id: number): Promise<boolean> => {

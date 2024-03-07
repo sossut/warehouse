@@ -111,7 +111,7 @@ const postOutDocket = async (outDocket: PostOutDocket) => {
 const putOutDocket = async (
   data: PutOutDocket,
   id: number
-): Promise<GetOutDocket> => {
+): Promise<OutDocket> => {
   const sql = promisePool.format('UPDATE OutDockets SET ? WHERE id = ?;', [
     data,
     id
@@ -121,44 +121,8 @@ const putOutDocket = async (
     throw new CustomError('OutDocket not updated', 400);
   }
 
-  const selectSql = promisePool.format(
-    `SELECT 
-       OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
-       JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
-      CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
-          'id', products.id,
-          'name', products.name,
-          'code', products.code,
-          'weight', products.weight,
-          'outDocketProductId', OutDocketProducts.id,
-          'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
-          'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
-          'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
-        )), ']') AS products,
-      JSON_OBJECT(
-        'id', clients.id,
-        'name', clients.name
-      ) AS client
-    FROM OutDockets
-    LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
-    LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
-    LEFT JOIN products ON OutDocketProducts.productId = products.id
-    LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
-    LEFT JOIN clients ON OutDockets.clientId = clients.id
-    WHERE OutDockets.id = ?`,
-    [id]
-  );
-  const [rows] = await promisePool.query<GetOutDocket[]>(selectSql);
-  if (rows.length === 0) {
-    throw new CustomError('OutDocket not found', 404);
-  }
-  const OutDockets = rows.map((row) => ({
-    ...row,
-    products: JSON.parse(row.products?.toString() || '{}'),
-    client: JSON.parse(row.client?.toString() || '{}'),
-    transportOption: JSON.parse(row.transportOption?.toString() || '{}')
-  }));
-  return OutDockets[0];
+  const outDocket = await getOutDocket(id.toString());
+  return outDocket;
 };
 
 const deleteOutDocket = async (id: number): Promise<boolean> => {

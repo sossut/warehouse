@@ -131,11 +131,11 @@ const productPut = async (
           manual: 'yes'
         });
       }
-      const message: MessageResponse = {
-        message: 'Product updated',
-        id: parseInt(req.params.id)
-      };
-      res.json(message);
+      // const message: MessageResponse = {
+      //   message: 'Product updated',
+      //   id: parseInt(req.params.id)
+      // };
+      res.json(result);
     }
   } catch (error) {
     next(error);
