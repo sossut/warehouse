@@ -14,6 +14,7 @@ interface SentOutDocket {
   parcels: number;
   departureAt: Date;
   products: SentOutDocketProduct[];
+  pending: 'yes' | 'no' | null;
 }
 
 interface GetSentOoutDocket extends RowDataPacket, SentOutDocket {}
