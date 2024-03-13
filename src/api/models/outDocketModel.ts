@@ -23,7 +23,7 @@ const getAllOutDockets = async (): Promise<OutDocket[]> => {
       'outDocketProductId', OutDocketProducts.id,
       'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
       'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
-      'collectedProductQuantity', pendingshipmentproducts.collectedProductQuantity,
+      'collectedProductQuantity', ps.collectedProductQuantity,
       'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
     )), ']') AS products,
    JSON_OBJECT(
@@ -34,10 +34,14 @@ FROM OutDockets
 LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
 LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
 LEFT JOIN products ON OutDocketProducts.productId = products.id
-LEFT JOIN PendingShipments ON OutDockets.id = PendingShipments.docketId
-LEFT JOIN PendingshipmentProducts ON OutDocketProducts.id = pendingshipmentproducts.outDocketProductId
 LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
 LEFT JOIN clients ON OutDockets.clientId = clients.id
+LEFT JOIN (
+   SELECT PendingShipments.docketId, PendingShipmentProducts.productId, SUM(PendingShipmentProducts.collectedProductQuantity) as collectedProductQuantity
+   FROM PendingShipments
+   LEFT JOIN PendingShipmentProducts ON PendingShipments.id = PendingShipmentProducts.pendingShipmentId
+   GROUP BY PendingShipments.docketId, PendingShipmentProducts.productId
+) AS ps ON OutDockets.id = ps.docketId AND OutDocketProducts.productId = ps.productId
 GROUP BY OutDockets.id`
   );
   if (rows.length === 0) {
