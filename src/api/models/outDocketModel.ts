@@ -13,29 +13,32 @@ import {
 const getAllOutDockets = async (): Promise<OutDocket[]> => {
   const [rows] = await promisePool.execute<GetOutDocket[]>(
     `SELECT 
-       OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
-       JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
-      CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
-          'id', products.id,
-          'name', products.name,
-          'code', products.code,
-          'weight', products.weight,
-          'outDocketProductId', OutDocketProducts.id,
-          'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
-          'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
-          'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
-        )), ']') AS products,
-      JSON_OBJECT(
-        'id', clients.id,
-        'name', clients.name
-      ) AS client
-    FROM OutDockets
-    LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
-    LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
-    LEFT JOIN products ON OutDocketProducts.productId = products.id
-    LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
-    LEFT JOIN clients ON OutDockets.clientId = clients.id
-    GROUP BY OutDockets.id`
+   OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, OutDockets.filename,
+   JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
+   CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+      'id', products.id,
+      'name', products.name,
+      'code', products.code,
+      'weight', products.weight,
+      'outDocketProductId', OutDocketProducts.id,
+      'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
+      'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
+      'collectedProductQuantity', pendingshipmentproducts.collectedProductQuantity,
+      'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
+    )), ']') AS products,
+   JSON_OBJECT(
+    'id', clients.id,
+    'name', clients.name
+  ) AS client
+FROM OutDockets
+LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
+LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
+LEFT JOIN products ON OutDocketProducts.productId = products.id
+LEFT JOIN PendingShipments ON OutDockets.id = PendingShipments.docketId
+LEFT JOIN PendingshipmentProducts ON OutDocketProducts.id = pendingshipmentproducts.outDocketProductId
+LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+LEFT JOIN clients ON OutDockets.clientId = clients.id
+GROUP BY OutDockets.id`
   );
   if (rows.length === 0) {
     throw new CustomError('No OutDockets found', 404);
@@ -52,28 +55,31 @@ const getAllOutDockets = async (): Promise<OutDocket[]> => {
 const getOutDocket = async (id: string): Promise<OutDocket> => {
   const [rows] = await promisePool.execute<GetOutDocket[]>(
     `SELECT 
-       OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, filename,
-       JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
-      CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
-          'id', products.id,
-          'name', products.name,
-          'code', products.code,
-          'weight', products.weight,
-          'outDocketProductId', OutDocketProducts.id,
-          'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
-          'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
-          'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
-        )), ']') AS products,
-      JSON_OBJECT(
-        'id', clients.id,
-        'name', clients.name
-      ) AS client
-    FROM OutDockets
-    LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
-    LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
-    LEFT JOIN products ON OutDocketProducts.productId = products.id
-    LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
-    LEFT JOIN clients ON OutDockets.clientId = clients.id
+   OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, OutDockets.filename,
+   JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
+   CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+      'id', products.id,
+      'name', products.name,
+      'code', products.code,
+      'weight', products.weight,
+      'outDocketProductId', OutDocketProducts.id,
+      'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
+      'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
+      'collectedProductQuantity', pendingshipmentproducts.collectedProductQuantity,
+      'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
+    )), ']') AS products,
+   JSON_OBJECT(
+    'id', clients.id,
+    'name', clients.name
+  ) AS client
+FROM OutDockets
+LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
+LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
+LEFT JOIN products ON OutDocketProducts.productId = products.id
+LEFT JOIN PendingShipments ON OutDockets.id = PendingShipments.docketId
+LEFT JOIN PendingshipmentProducts ON OutDocketProducts.id = pendingshipmentproducts.outDocketProductId
+LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+LEFT JOIN clients ON OutDockets.clientId = clients.id
     WHERE OutDockets.id = ?`,
     [id]
   );

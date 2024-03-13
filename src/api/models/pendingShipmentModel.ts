@@ -19,7 +19,7 @@ const getAllPendingShipments = async (): Promise<PendingShipment[]> => {
         'weight', products.weight,
         'orderedProductId', PendingShipmentProducts.id,
         'orderedProductQuantity', PendingShipmentProducts.orderedProductQuantity,
-        'deliveredProductQuantity', PendingShipmentProducts.deliveredProductQuantity,
+        'collectedProductQuantity', PendingShipmentProducts.collectedProductQuantity,
         'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
       )), ']') AS products,
    JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
@@ -67,7 +67,7 @@ const getPendingShipment = async (id: string): Promise<PendingShipment> => {
         'weight', products.weight,
         'orderedProductId', PendingShipmentProducts.id,
         'orderedProductQuantity', PendingShipmentProducts.orderedProductQuantity,
-        'deliveredProductQuantity', PendingShipmentProducts.deliveredProductQuantity,
+        'collectedProductQuantity', PendingShipmentProducts.collectedProductQuantity,
         'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
       )), ']') AS products,
    JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,

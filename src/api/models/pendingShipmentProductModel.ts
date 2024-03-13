@@ -55,13 +55,14 @@ const postPendingShipmentProduct = async (
   pendingShipmentProduct: PostPendingShipmentProduct
 ) => {
   const sql = promisePool.format(
-    `INSERT INTO PendingShipmentProducts (PendingShipmentId, productId, orderedProductQuantity, deliveredProductQuantity)
-    VALUES (?, ?, ?, ?)`,
+    `INSERT INTO PendingShipmentProducts (PendingShipmentId, productId, orderedProductQuantity, collectedProductQuantity, outDocketProductId)
+    VALUES (?, ?, ?, ?, ?)`,
     [
       pendingShipmentProduct.pendingShipmentId,
       pendingShipmentProduct.productId,
       pendingShipmentProduct.orderedProductQuantity,
-      pendingShipmentProduct.deliveredProductQuantity
+      pendingShipmentProduct.collectedProductQuantity,
+      pendingShipmentProduct.outDocketProductId
     ]
   );
   const [headers] = await promisePool.execute<ResultSetHeader>(sql);

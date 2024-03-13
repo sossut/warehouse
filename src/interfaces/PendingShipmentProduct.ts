@@ -7,7 +7,7 @@ interface PendingShipmentProduct {
   pendingShipmentId: number | PendingShipment;
   productId: number | Product;
   orderedProductQuantity?: number;
-  deliveredProductQuantity: number;
+  collectedProductQuantity: number;
   outDocketProductId?: number;
 }
 

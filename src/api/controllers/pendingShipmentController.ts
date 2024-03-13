@@ -87,15 +87,16 @@ const pendingShipmentPost = async (
         const productId = product.productId;
         const orderedProductQuantity = product.orderedProductQuantity;
         const pendingShipmentId = id;
-        let deliveredProductQuantity = product.deliveredProductQuantity;
-        if (!deliveredProductQuantity || deliveredProductQuantity < 0) {
-          deliveredProductQuantity = 0;
+        let collectedProductQuantity = product.deliveredProductQuantity;
+        if (!collectedProductQuantity || collectedProductQuantity < 0) {
+          collectedProductQuantity = 0;
         }
         const pendingShipmentProduct: PendingShipmentProduct = {
           productId: productId as number,
           orderedProductQuantity: orderedProductQuantity,
           pendingShipmentId: pendingShipmentId,
-          deliveredProductQuantity: deliveredProductQuantity
+          collectedProductQuantity: collectedProductQuantity,
+          outDocketProductId: product.outDocketProductId
         };
         if (!product.outDocketProductId) {
           throw new CustomError('sentOutDocketProductId not found', 404);
