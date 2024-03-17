@@ -24,6 +24,7 @@ const getAllOutDockets = async (): Promise<OutDocket[]> => {
       'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
       'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
       'collectedProductQuantity', ps.collectedProductQuantity,
+      'pendingShipmentProductId', ps.id,
       'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
     )), ']') AS products,
    JSON_OBJECT(
@@ -37,7 +38,7 @@ LEFT JOIN products ON OutDocketProducts.productId = products.id
 LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
 LEFT JOIN clients ON OutDockets.clientId = clients.id
 LEFT JOIN (
-   SELECT PendingShipments.docketId, PendingShipmentProducts.productId, SUM(PendingShipmentProducts.collectedProductQuantity) as collectedProductQuantity
+   SELECT PendingShipments.docketId, PendingShipmentProducts.id, PendingShipmentProducts.productId, SUM(PendingShipmentProducts.collectedProductQuantity) as collectedProductQuantity
    FROM PendingShipments
    LEFT JOIN PendingShipmentProducts ON PendingShipments.id = PendingShipmentProducts.pendingShipmentId
    GROUP BY PendingShipments.docketId, PendingShipmentProducts.productId
@@ -69,7 +70,8 @@ const getOutDocket = async (id: string): Promise<OutDocket> => {
       'outDocketProductId', OutDocketProducts.id,
       'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
       'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
-      'collectedProductQuantity', pendingshipmentproducts.collectedProductQuantity,
+      'collectedProductQuantity', ps.collectedProductQuantity,
+      'pendingShipmentProductId', ps.id,
       'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
     )), ']') AS products,
    JSON_OBJECT(
@@ -80,10 +82,14 @@ FROM OutDockets
 LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
 LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
 LEFT JOIN products ON OutDocketProducts.productId = products.id
-LEFT JOIN PendingShipments ON OutDockets.id = PendingShipments.docketId
-LEFT JOIN PendingshipmentProducts ON OutDocketProducts.id = pendingshipmentproducts.outDocketProductId
 LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
 LEFT JOIN clients ON OutDockets.clientId = clients.id
+LEFT JOIN (
+   SELECT PendingShipments.docketId, PendingShipmentProducts.id, PendingShipmentProducts.productId, SUM(PendingShipmentProducts.collectedProductQuantity) as collectedProductQuantity
+   FROM PendingShipments
+   LEFT JOIN PendingShipmentProducts ON PendingShipments.id = PendingShipmentProducts.pendingShipmentId
+   GROUP BY PendingShipments.docketId, PendingShipmentProducts.productId
+) AS ps ON OutDockets.id = ps.docketId AND OutDocketProducts.productId = ps.productId
     WHERE OutDockets.id = ?`,
     [id]
   );
@@ -97,6 +103,58 @@ LEFT JOIN clients ON OutDockets.clientId = clients.id
     transportOption: JSON.parse(row.transportOption?.toString() || '{}')
   }));
   return OutDockets[0];
+};
+
+const getOutDocketsByIds = async (ids: string[]): Promise<OutDocket[]> => {
+  const sql = promisePool.format(
+    `SELECT 
+   OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, OutDockets.filename,
+   JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
+   CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
+      'id', products.id,
+      'name', products.name,
+      'code', products.code,
+      'weight', products.weight,
+      'outDocketProductId', OutDocketProducts.id,
+      'orderedProductQuantity', OutDocketProducts.orderedProductQuantity,
+      'deliveredProductQuantity', OutDocketProducts.deliveredProductQuantity,
+      'collectedProductQuantity', ps.collectedProductQuantity,
+      'pendingShipmentProductId', ps.id,
+      'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
+    )), ']') AS products,
+   JSON_OBJECT(
+    'id', clients.id,
+    'name', clients.name
+  ) AS client
+FROM OutDockets
+LEFT JOIN TransportOptions ON OutDockets.transportOptionId = TransportOptions.id
+LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId
+LEFT JOIN products ON OutDocketProducts.productId = products.id
+LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
+LEFT JOIN clients ON OutDockets.clientId = clients.id
+LEFT JOIN (
+   SELECT PendingShipments.docketId, PendingShipmentProducts.id, PendingShipmentProducts.productId, SUM(PendingShipmentProducts.collectedProductQuantity) as collectedProductQuantity
+   FROM PendingShipments
+   LEFT JOIN PendingShipmentProducts ON PendingShipments.id = PendingShipmentProducts.pendingShipmentId
+   GROUP BY PendingShipments.docketId, PendingShipmentProducts.productId
+) AS ps ON OutDockets.id = ps.docketId AND OutDocketProducts.productId = ps.productId
+    WHERE OutDockets.id IN (?)
+    GROUP BY OutDockets.id`,
+    [ids]
+  );
+
+  const [rows] = await promisePool.execute<GetOutDocket[]>(sql);
+  if (rows.length === 0) {
+    throw new CustomError('OutDocket not found', 404);
+  }
+  const OutDockets = rows.map((row) => ({
+    ...row,
+    products: JSON.parse(row.products?.toString() || '{}'),
+    client: JSON.parse(row.client?.toString() || '{}'),
+    transportOption: JSON.parse(row.transportOption?.toString() || '{}')
+  }));
+
+  return OutDockets;
 };
 
 const postOutDocket = async (outDocket: PostOutDocket) => {
@@ -148,6 +206,7 @@ const deleteOutDocket = async (id: number): Promise<boolean> => {
 export {
   getAllOutDockets,
   getOutDocket,
+  getOutDocketsByIds,
   postOutDocket,
   putOutDocket,
   deleteOutDocket

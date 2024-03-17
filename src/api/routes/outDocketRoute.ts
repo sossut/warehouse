@@ -4,7 +4,8 @@ import {
   outDocketGet,
   outDocketPost,
   outDocketPut,
-  outDocketDelete
+  outDocketDelete,
+  outDocketListGetByIds
 } from '../controllers/outDocketController';
 import { body, param } from 'express-validator';
 
@@ -51,6 +52,14 @@ router
     upload.single('filename'),
     passport.authenticate('jwt', { session: false }),
     outDocketPost
+  );
+
+router
+  .route('/multiple')
+  .post(
+    passport.authenticate('jwt', { session: false }),
+    body('ids').isArray({ min: 1 }).withMessage('At least one id is required'),
+    outDocketListGetByIds
   );
 
 router

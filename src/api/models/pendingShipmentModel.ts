@@ -20,6 +20,7 @@ const getAllPendingShipments = async (): Promise<PendingShipment[]> => {
         'orderedProductId', PendingShipmentProducts.id,
         'orderedProductQuantity', PendingShipmentProducts.orderedProductQuantity,
         'collectedProductQuantity', PendingShipmentProducts.collectedProductQuantity,
+        'outDocketProductId', OutDocketProducts.id,
         'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
       )), ']') AS products,
    JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
@@ -40,6 +41,7 @@ const getAllPendingShipments = async (): Promise<PendingShipment[]> => {
      LEFT JOIN products ON PendingShipmentProducts.productId = products.id
      LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
      LEFT JOIN OutDockets ON PendingShipments.docketId = OutDockets.id
+     LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId AND PendingShipmentProducts.productId = OutDocketProducts.productId
      LEFT JOIN clients ON OutDockets.clientId = clients.id
      GROUP BY PendingShipments.id`
   );
@@ -68,6 +70,7 @@ const getPendingShipment = async (id: string): Promise<PendingShipment> => {
         'orderedProductId', PendingShipmentProducts.id,
         'orderedProductQuantity', PendingShipmentProducts.orderedProductQuantity,
         'collectedProductQuantity', PendingShipmentProducts.collectedProductQuantity,
+        'outDocketProductId', OutDocketProducts.id,
         'quantityOption', JSON_OBJECT('id', products.quantityOptionId, 'quantityOption', quantityOptions.quantityOption)
       )), ']') AS products,
    JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
@@ -88,6 +91,7 @@ const getPendingShipment = async (id: string): Promise<PendingShipment> => {
      LEFT JOIN products ON PendingShipmentProducts.productId = products.id
      LEFT JOIN quantityOptions ON products.quantityOptionId = quantityOptions.id
      LEFT JOIN OutDockets ON PendingShipments.docketId = OutDockets.id
+     LEFT JOIN OutDocketProducts ON OutDockets.id = OutDocketProducts.OutDocketId AND PendingShipmentProducts.productId = OutDocketProducts.productId
      LEFT JOIN clients ON OutDockets.clientId = clients.id
      
     WHERE PendingShipments.id = ?`,

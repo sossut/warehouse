@@ -5,8 +5,7 @@ import {
   getSentOutDocket,
   postSentOutDocket,
   putSentOutDocket,
-  deleteSentOutDocket,
-  getPendingSentOutDockets
+  deleteSentOutDocket
 } from '../models/sentOutDocketModel';
 import CustomError from '../../classes/CustomError';
 import {

@@ -10,9 +10,19 @@ import { body, param } from 'express-validator';
 
 import passport from 'passport';
 import {
+  pendingShipmentDelete,
+  pendingShipmentGet,
   pendingShipmentListGet,
-  pendingShipmentPost
+  pendingShipmentPost,
+  pendingShipmentPut
 } from '../controllers/pendingShipmentController';
+import {
+  daysShipmentsDelete,
+  daysShipmentsGet,
+  daysShipmentsListGet,
+  daysShipmentsPost,
+  daysShipmentsPut
+} from '../controllers/daysShipmentsController';
 
 const router = express.Router();
 
@@ -59,6 +69,54 @@ router
     body('docketId').isNumeric().notEmpty().escape(),
     passport.authenticate('jwt', { session: false }),
     pendingShipmentPost
+  );
+
+router
+  .route('/pending/:id')
+  .get(
+    param('id').isNumeric(),
+    passport.authenticate('jwt', { session: false }),
+    pendingShipmentGet
+  )
+  .put(passport.authenticate('jwt', { session: false }), pendingShipmentPut)
+  .delete(
+    param('id').isNumeric(),
+    passport.authenticate('jwt', { session: false }),
+    pendingShipmentDelete
+  );
+
+router
+  .route('/days-shipments')
+  .get(passport.authenticate('jwt', { session: false }), daysShipmentsListGet)
+  .post(
+    body('departedAt')
+      .custom((value) => {
+        if (!value) return true;
+        const date = Date.parse(value);
+        if (isNaN(date)) {
+          throw new Error('Invalid date format');
+        }
+        return true;
+      })
+      .optional()
+      .escape(),
+    // body('sentOutDockets').isArray().optional().escape(),
+    passport.authenticate('jwt', { session: false }),
+    daysShipmentsPost
+  );
+
+router
+  .route('/days-shipments/:id')
+  .get(
+    param('id').isNumeric(),
+    passport.authenticate('jwt', { session: false }),
+    daysShipmentsGet
+  )
+  .put(passport.authenticate('jwt', { session: false }), daysShipmentsPut)
+  .delete(
+    param('id').isNumeric(),
+    passport.authenticate('jwt', { session: false }),
+    daysShipmentsDelete
   );
 
 router
