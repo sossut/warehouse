@@ -90,7 +90,6 @@ const getAllDaysShipments = async (): Promise<DaysShipments[]> => {
       sentOutDockets: sentOutDockets.map(
         (docket: {
           sentOutDocket: {
-            toString: () => any;
             products: { toString: () => any };
             transportOption: { toString: () => any };
             outDocket: { toString: () => any };
@@ -198,7 +197,6 @@ const getDaysShipments = async (id: string): Promise<DaysShipments> => {
       sentOutDockets: sentOutDockets.map(
         (docket: {
           sentOutDocket: {
-            toString: () => any;
             products: { toString: () => any };
             transportOption: { toString: () => any };
             outDocket: { toString: () => any };

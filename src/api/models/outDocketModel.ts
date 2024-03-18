@@ -159,13 +159,14 @@ LEFT JOIN (
 
 const postOutDocket = async (outDocket: PostOutDocket) => {
   const sql = promisePool.format(
-    `INSERT INTO OutDockets (departureAt, transportOptionId, userId, docketNumber)
-    VALUES (?, ?, ?, ?)`,
+    `INSERT INTO OutDockets (departureAt, transportOptionId, userId, docketNumber, clientId)
+    VALUES (?, ?, ?, ?, ?)`,
     [
       outDocket.departureAt,
       outDocket.transportOptionId,
       outDocket.userId,
-      outDocket.docketNumber
+      outDocket.docketNumber,
+      outDocket.clientId
     ]
   );
   console.log(sql);
