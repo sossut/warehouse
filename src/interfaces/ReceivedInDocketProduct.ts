@@ -8,7 +8,8 @@ interface ReceivedInDocketProduct {
   receivedInDocketId: number | ReceivedInDocket;
   productId: number | Product;
   orderedProductQuantity: number;
-  deliveredProductQuantity: number;
+  receivedProductQuantity: number;
+  inDocketProductId?: number;
 }
 
 interface GetReceivedInDocketProduct

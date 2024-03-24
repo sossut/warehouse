@@ -87,7 +87,7 @@ const pendingShipmentPost = async (
         const productId = product.productId;
         const orderedProductQuantity = product.orderedProductQuantity;
         const pendingShipmentId = id;
-        let collectedProductQuantity = product.deliveredProductQuantity;
+        let collectedProductQuantity = product.collectedProductQuantity;
         if (!collectedProductQuantity || collectedProductQuantity < 0) {
           collectedProductQuantity = 0;
         }

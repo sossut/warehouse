@@ -2,7 +2,8 @@ import { RowDataPacket } from 'mysql2';
 import { OutDocket } from './OutDocket';
 import { TransportOption } from './TransportOption';
 import { User } from './User';
-import { SentOutDocketProduct } from './SentOutDocketProduct';
+
+import { PendingShipmentProduct } from './PendingShipmentProduct';
 
 interface PendingShipment {
   id: number;
@@ -13,7 +14,7 @@ interface PendingShipment {
   status: 'open' | 'closed';
   parcels: number;
   departureAt: Date;
-  products: SentOutDocketProduct[];
+  products: PendingShipmentProduct[];
 }
 
 interface GetPendingShipment extends RowDataPacket, PendingShipment {}

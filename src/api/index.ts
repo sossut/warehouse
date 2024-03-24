@@ -15,12 +15,13 @@ import clientRoute from './routes/clientRoute';
 import sentOutDocketRoute from './routes/sentOutDocketRoute';
 import inDocketRoute from './routes/inDocketRoute';
 import vendorRoute from './routes/vendorRoute';
+import daysHoursRoute from './routes/daysHoursRoute';
 const router = express.Router();
 
 router.get<{}, MessageResponse>('/', (req, res) => {
   res.json({
     message:
-      'api/v1/ - user, product, auth, row, gap, spot, pallet, quantity-option, transport-option, OutDocket, client, sent-outdocket'
+      'api/v1/ - user, product, auth, row, gap, spot, pallet, quantity-option, transport-option, OutDocket, client, sent-outdocket, inDocket, vendor, days-hours'
   });
 });
 
@@ -38,5 +39,6 @@ router.use('/client', clientRoute);
 router.use('/sent-outdocket', sentOutDocketRoute);
 router.use('/indocket', inDocketRoute);
 router.use('/vendor', vendorRoute);
+router.use('/days-hours', daysHoursRoute);
 
 export default router;

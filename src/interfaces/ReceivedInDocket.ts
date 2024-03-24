@@ -1,17 +1,19 @@
 import { RowDataPacket } from 'mysql2';
-import { User } from './User';
-import { TransportOption } from './TransportOption';
+import { ReceivedInDocketProduct } from './ReceivedInDocketProduct';
+
 import { InDocket } from './InDocket';
+import { User } from './User';
+import { Vendor } from './Vendor';
 
 interface ReceivedInDocket {
   id: number;
-  docketId: number | InDocket;
-  transportOptionId: number | TransportOption;
-  userId: number | User;
+  inDocketId: number | InDocket;
+  arrivedAt: Date;
   createdAt: Date;
-  status: 'open' | 'closed';
-  parcels: number;
-  arrivalAt: Date;
+  vendor?: Vendor;
+  vendorId: number | Vendor;
+  userId: number | User;
+  products: ReceivedInDocketProduct[];
 }
 
 interface GetReceivedInDocket extends RowDataPacket, ReceivedInDocket {}

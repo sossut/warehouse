@@ -21,7 +21,7 @@ import {
   postOutDocketProduct,
   putOutDocketProduct
 } from '../models/outDocketProductModel';
-import { putOutDocket } from '../models/outDocketModel';
+import { getOutDocket, putOutDocket } from '../models/outDocketModel';
 import { postProductHistoryLeave } from '../models/productHistoryModel';
 const sentOutDocketListGet = async (
   req: Request,
@@ -89,7 +89,6 @@ const sentOutDocketPost = async (
     const products = req.body.products;
     if (sentOutDocket) {
       if (products) {
-        let allProductsDelivered = true;
         for (const product of products) {
           let deliveredProductQuantity = product.deliveredProductQuantity;
           if (!deliveredProductQuantity || deliveredProductQuantity < 0) {
@@ -123,8 +122,6 @@ const sentOutDocketPost = async (
             deliveredProductQuantity;
           if (delivered >= outDocketProduct.orderedProductQuantity) {
             delivered = outDocketProduct.orderedProductQuantity;
-          } else {
-            allProductsDelivered = false;
           }
 
           await putOutDocketProduct(
@@ -176,7 +173,16 @@ const sentOutDocketPost = async (
           }
           const quantity = productQuantity.quantity - deliveredProductQuantity;
           await putProduct({ quantity }, product.productId);
-          if (allProductsDelivered) {
+          const od = await getOutDocket(req.body.docketId.toString());
+          const prod = od.products;
+          let complete = false;
+          if (prod) {
+            complete = prod.every(
+              (p: any) =>
+                p.orderedProductQuantity === p.deliveredProductQuantity
+            );
+          }
+          if (complete) {
             await putOutDocket(
               { status: 'closed' },
               req.body.docketId as number

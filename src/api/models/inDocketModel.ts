@@ -37,7 +37,12 @@ const getAllInDockets = async (): Promise<InDocket[]> => {
   if (rows.length === 0) {
     throw new CustomError('No inDockets found', 404);
   }
-  return rows;
+  const inDockets = rows.map((row) => ({
+    ...row,
+    products: JSON.parse(row.products?.toString() || '{}'),
+    vendor: JSON.parse(row.vendor?.toString() || '{}')
+  }));
+  return inDockets;
 };
 
 const getInDocket = async (id: string): Promise<InDocket> => {
@@ -68,12 +73,17 @@ const getInDocket = async (id: string): Promise<InDocket> => {
   if (rows.length === 0) {
     throw new CustomError('InDocket not found', 404);
   }
-  return rows[0];
+  const inDocket = rows.map((row) => ({
+    ...row,
+    products: JSON.parse(row.products?.toString() || '{}'),
+    vendor: JSON.parse(row.vendor?.toString() || '{}')
+  }))[0];
+  return inDocket;
 };
 
 const postInDocket = async (inDocket: PostInDocket) => {
-  const [headers] = await promisePool.execute<ResultSetHeader>(
-    `INSERT INTO inDockets (docketNumber, arrivalAt, transportOptionId, userId)
+  const sql = promisePool.format(
+    `INSERT INTO InDockets (docketNumber, arrivalAt, userId, vendorId)
     VALUES (?, ?, ?, ?)`,
     [
       inDocket.docketNumber,
@@ -82,6 +92,8 @@ const postInDocket = async (inDocket: PostInDocket) => {
       inDocket.vendorId
     ]
   );
+  console.log(sql);
+  const [headers] = await promisePool.execute<ResultSetHeader>(sql);
   if (headers.affectedRows === 0) {
     throw new CustomError('InDocket not created', 400);
   }

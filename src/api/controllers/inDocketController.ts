@@ -13,6 +13,11 @@ import {
 } from '../models/inDocketModel';
 
 import { PostInDocket, PutInDocket } from '../../interfaces/InDocket';
+import { postInDocketProduct } from '../models/inDocketProductModel';
+import { InDocketProduct } from '../../interfaces/InDocketProduct';
+import { User } from '../../interfaces/User';
+import { getProduct, putProduct } from '../models/productModel';
+import { postProductHistoryArrive } from '../models/productHistoryModel';
 
 const inDocketListGet = async (
   req: Request,
@@ -52,6 +57,7 @@ const inDocketPost = async (
   next: NextFunction
 ) => {
   try {
+    console.log(req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const messages = errors
@@ -65,8 +71,41 @@ const inDocketPost = async (
       console.log(messages);
       throw new CustomError(messages, 400);
     }
-    const inDocket = await postInDocket(req.body);
-    res.json(inDocket);
+    req.body.userId = (req.user as User).id;
+    const id = await postInDocket(req.body);
+    const products = req.body.products;
+    if (products) {
+      for (const product of products) {
+        let orderedQ = product.orderedProductQuantity;
+        if (!orderedQ) {
+          orderedQ = 0;
+        }
+        const dp: InDocketProduct = {
+          inDocketId: id,
+          productId: product.productId,
+          orderedProductQuantity: orderedQ,
+          receivedProductQuantity: product.receivedProductQuantity
+        };
+        await postInDocketProduct(dp);
+        const prod = await getProduct(product.productId.toString());
+        if (product.receivedProductQuantity > 0) {
+          await postProductHistoryArrive({
+            productId: product.productId,
+            quantity: product.receivedProductQuantity,
+            inDocketId: id
+          });
+          const quantity =
+            Number(prod.quantity) + Number(product.receivedProductQuantity);
+
+          await putProduct({ quantity }, product.productId as number);
+        }
+      }
+    }
+    const message: MessageResponse = {
+      message: 'InDocket created',
+      id
+    };
+    res.json(message);
   } catch (error) {
     next(error);
   }

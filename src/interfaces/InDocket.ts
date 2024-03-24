@@ -1,6 +1,7 @@
 import { RowDataPacket } from 'mysql2';
 import { User } from './User';
 import { Vendor } from './Vendor';
+import { InDocketProduct } from './InDocketProduct';
 
 interface InDocket {
   id: number;
@@ -12,6 +13,7 @@ interface InDocket {
   status: 'open' | 'closed';
   arrivedAt: Date | null;
   filename: string;
+  products: InDocketProduct[];
 }
 
 interface GetInDocket extends RowDataPacket, InDocket {}
