@@ -187,6 +187,11 @@ const sentOutDocketPost = async (
               { status: 'closed' },
               req.body.docketId as number
             );
+          } else {
+            await putOutDocket(
+              { backOrder: true },
+              req.body.docketId as number
+            );
           }
         }
       }

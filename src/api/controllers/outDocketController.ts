@@ -6,7 +6,8 @@ import {
   postOutDocket,
   putOutDocket,
   deleteOutDocket,
-  getOutDocketsByIds
+  getOutDocketsByIds,
+  getOutDocketBackOrder
 } from '../models/outDocketModel';
 
 import { Request, Response, NextFunction } from 'express';
@@ -57,6 +58,19 @@ const outDocketListGetByIds = async (
 ) => {
   try {
     const OutDockets = await getOutDocketsByIds(req.body.ids);
+    res.json(OutDockets);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const outDocketGetBackOrder = async (
+  req: Request<{}, {}, { ids: string[] }>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const OutDockets = await getOutDocketBackOrder(req.body.ids);
     res.json(OutDockets);
   } catch (error) {
     next(error);
@@ -272,6 +286,7 @@ export {
   outDocketListGet,
   outDocketGet,
   outDocketListGetByIds,
+  outDocketGetBackOrder,
   outDocketPost,
   outDocketPut,
   outDocketDelete

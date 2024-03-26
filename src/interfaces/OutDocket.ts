@@ -16,6 +16,7 @@ interface OutDocket {
   transportOptionId: number | TransportOption;
   filename: string;
   products?: OutDocketProduct[];
+  backOrder?: boolean;
 }
 
 interface GetOutDocket extends RowDataPacket, OutDocket {}

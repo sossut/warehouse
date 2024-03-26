@@ -5,7 +5,8 @@ import {
   outDocketPost,
   outDocketPut,
   outDocketDelete,
-  outDocketListGetByIds
+  outDocketListGetByIds,
+  outDocketGetBackOrder
 } from '../controllers/outDocketController';
 import { body, param } from 'express-validator';
 
@@ -60,6 +61,14 @@ router
     passport.authenticate('jwt', { session: false }),
     body('ids').isArray({ min: 1 }).withMessage('At least one id is required'),
     outDocketListGetByIds
+  );
+
+router
+  .route('/back-order')
+  .post(
+    passport.authenticate('jwt', { session: false }),
+    body('ids').isArray({ min: 1 }).withMessage('At least one id is required'),
+    outDocketGetBackOrder
   );
 
 router

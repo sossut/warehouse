@@ -13,7 +13,7 @@ import {
 const getAllOutDockets = async (): Promise<OutDocket[]> => {
   const [rows] = await promisePool.execute<GetOutDocket[]>(
     `SELECT 
-   OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, OutDockets.filename,
+   OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, OutDockets.filename, OutDockets.backOrder,
    JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
    CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
       'id', products.id,
@@ -60,7 +60,7 @@ GROUP BY OutDockets.id`
 const getOutDocket = async (id: string): Promise<OutDocket> => {
   const [rows] = await promisePool.execute<GetOutDocket[]>(
     `SELECT 
-   OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, OutDockets.filename,
+   OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, OutDockets.filename, OutDockets.backOrder,
    JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
    CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
       'id', products.id,
@@ -108,7 +108,7 @@ LEFT JOIN (
 const getOutDocketsByIds = async (ids: string[]): Promise<OutDocket[]> => {
   const sql = promisePool.format(
     `SELECT 
-   OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, OutDockets.filename,
+   OutDockets.id, OutDockets.departureAt, OutDockets.transportOptionId, OutDockets.userId, OutDockets.docketNumber, OutDockets.createdAt, OutDockets.status, OutDockets.filename, OutDockets.backOrder,
    JSON_OBJECT('id', transportOptions.id, 'transportOption', transportOptions.transportOption) AS transportOption,
    CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
       'id', products.id,
@@ -157,6 +157,26 @@ LEFT JOIN (
   return OutDockets;
 };
 
+const getOutDocketBackOrder = async (ids: string[]) => {
+  const sql = promisePool.format(
+    `SELECT
+  OutDockets.id, OutDockets.backOrder
+  FROM OutDockets
+  WHERE id IN (?)`,
+    [ids]
+  );
+
+  const [rows] = await promisePool.execute<GetOutDocket[]>(sql);
+  if (rows.length === 0) {
+    throw new CustomError('OutDocket not found', 404);
+  }
+  const OutDockets = rows.map((row) => ({
+    ...row
+  }));
+
+  return OutDockets;
+};
+
 const postOutDocket = async (outDocket: PostOutDocket) => {
   const sql = promisePool.format(
     `INSERT INTO OutDockets (departureAt, transportOptionId, userId, docketNumber, clientId)
@@ -194,6 +214,23 @@ const putOutDocket = async (
   return outDocket;
 };
 
+const putOutDocketBackOrder = async (
+  trueOrFalse: boolean,
+  id: number
+): Promise<OutDocket> => {
+  const sql = promisePool.format(
+    'UPDATE OutDockets SET backOrder = ? WHERE id = ?;',
+    [trueOrFalse, id]
+  );
+  const [headers] = await promisePool.query<ResultSetHeader>(sql);
+  if (headers.affectedRows === 0) {
+    throw new CustomError('OutDocket not updated', 400);
+  }
+
+  const outDocket = await getOutDocket(id.toString());
+  return outDocket;
+};
+
 const deleteOutDocket = async (id: number): Promise<boolean> => {
   const sql = promisePool.format('DELETE FROM OutDockets WHERE id = ?;', [id]);
   const [headers] = await promisePool.query<ResultSetHeader>(sql);
@@ -208,7 +245,9 @@ export {
   getAllOutDockets,
   getOutDocket,
   getOutDocketsByIds,
+  getOutDocketBackOrder,
   postOutDocket,
   putOutDocket,
+  putOutDocketBackOrder,
   deleteOutDocket
 };
