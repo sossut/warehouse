@@ -166,6 +166,27 @@ const getSpotsByProductCode = async (code: string): Promise<Spot[]> => {
   return spots;
 };
 
+const getSpotIdByRowGapSpot = async (
+  row: number,
+  gap: number,
+  spot: number
+): Promise<GetSpot> => {
+  const [rows] = await promisePool.execute<GetSpot[]>(
+    `SELECT spots.id as spotId, pallets.id as palletId
+    FROM spots
+    LEFT JOIN gaps ON spots.gapId = gaps.id
+    LEFT JOIN whrows ON gaps.rowId = whrows.id
+    LEFT JOIN pallets ON spots.id = pallets.spotId
+    WHERE spotNumber = ? AND gapNumber = ? AND rowNumber = ?`,
+    [spot, gap, row]
+  );
+  if (rows.length === 0) {
+    throw new CustomError('Spot not found', 404);
+  }
+  console.log(rows[0]);
+  return rows[0];
+};
+
 const postSpot = async (spot: PostSpot) => {
   const [headers] = await promisePool.execute<ResultSetHeader>(
     `INSERT INTO spots (spotNumber, gapId)
@@ -208,6 +229,7 @@ export {
   getAllSpots,
   getSpot,
   getSpotsByProductCode,
+  getSpotIdByRowGapSpot,
   postSpot,
   putSpot,
   deleteSpot

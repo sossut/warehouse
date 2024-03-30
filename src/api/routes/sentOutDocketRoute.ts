@@ -100,7 +100,7 @@ router
       })
       .optional()
       .escape(),
-    // body('sentOutDockets').isArray().optional().escape(),
+    body('json').isString().optional().escape(),
     passport.authenticate('jwt', { session: false }),
     daysShipmentsPost
   );

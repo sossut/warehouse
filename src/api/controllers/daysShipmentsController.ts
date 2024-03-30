@@ -99,6 +99,7 @@ const daysShipmentsPut = async (
 
       throw new CustomError(messages, 400);
     }
+    req.body.json = JSON.stringify(req.body.json);
     const result = await putDaysShipments(req.body, parseInt(req.params.id));
     if (!result) {
       throw new CustomError('DaysShipments not updated', 400);

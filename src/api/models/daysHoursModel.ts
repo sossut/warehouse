@@ -34,6 +34,22 @@ const getDaysHours = async (id: string): Promise<DaysHours> => {
   return rows[0];
 };
 
+const getDaysHoursBetweenDates = async (
+  startDate: string,
+  endDate: string
+): Promise<DaysHours[]> => {
+  const [rows] = await promisePool.execute<GetDaysHours[]>(
+    `SELECT * 
+    FROM DaysHours
+    WHERE day BETWEEN ? AND ?`,
+    [startDate, endDate]
+  );
+  if (rows.length === 0) {
+    throw new CustomError('DaysHours not found', 404);
+  }
+  return rows;
+};
+
 const postDaysHours = async (daysHours: PostDaysHours) => {
   const sql = promisePool.format(
     `INSERT INTO DaysHours (day, workedHoursSeconds, kilometers)
@@ -76,6 +92,7 @@ const deleteDaysHours = async (id: string) => {
 export {
   getAllDaysHours,
   getDaysHours,
+  getDaysHoursBetweenDates,
   postDaysHours,
   putDaysHours,
   deleteDaysHours

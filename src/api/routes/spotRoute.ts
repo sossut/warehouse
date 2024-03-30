@@ -6,7 +6,8 @@ import {
   spotPut,
   spotDelete,
   spotGapRowPost,
-  spotListByProductCodeGet
+  spotListByProductCodeGet,
+  spotIdByRowGapSpotGet
 } from '../controllers/spotController';
 import { body, check, param } from 'express-validator';
 import passport from 'passport';
@@ -45,6 +46,16 @@ router
     param('code').isString().notEmpty().escape(),
     passport.authenticate('jwt', { session: false }),
     spotListByProductCodeGet
+  );
+
+router
+  .route('/row-gap-spot/:row/:gap/:spot')
+  .get(
+    param('row').isNumeric().notEmpty().escape(),
+    param('gap').isNumeric().notEmpty().escape(),
+    param('spot').isNumeric().notEmpty().escape(),
+    passport.authenticate('jwt', { session: false }),
+    spotIdByRowGapSpotGet
   );
 
 router

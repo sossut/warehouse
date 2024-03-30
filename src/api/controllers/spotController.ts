@@ -6,7 +6,8 @@ import {
   putSpot,
   getAllSpots,
   getSpot,
-  getSpotsByProductCode
+  getSpotsByProductCode,
+  getSpotIdByRowGapSpot
 } from '../models/spotModel';
 import { Request, Response, NextFunction } from 'express';
 
@@ -102,6 +103,30 @@ const spotListByProductCodeGet = async (
       throw new CustomError('No spots found', 404);
     }
     res.json(spots);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const spotIdByRowGapSpotGet = async (
+  req: Request<{ row: string; gap: string; spot: string }, {}, {}>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const row = req.params.row;
+    const gap = req.params.gap;
+    const spot = req.params.spot;
+    const spotId = await getSpotIdByRowGapSpot(
+      parseInt(row),
+      parseInt(gap),
+      parseInt(spot)
+    );
+    if (!spotId) {
+      throw new CustomError('Spot not found', 404);
+    }
+    console.log(spotId);
+    res.json(spotId);
   } catch (error) {
     next(error);
   }
@@ -210,6 +235,7 @@ export {
   spotListGet,
   spotGet,
   spotListByProductCodeGet,
+  spotIdByRowGapSpotGet,
   spotPost,
   spotGapRowPost,
   spotPut,

@@ -13,7 +13,8 @@ import {
 const getAllDaysShipments = async (): Promise<DaysShipments[]> => {
   const [rows] = await promisePool.execute<GetDaysShipments[]>(
     `SELECT 
-      DaysShipments.id, 
+      DaysShipments.id,
+      DaysShipments.json,
       DaysShipments.departedAt,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
         'id', daysShipmentsSentOutDockets.id,
@@ -121,6 +122,7 @@ const getDaysShipments = async (id: string): Promise<DaysShipments> => {
     `SELECT 
       DaysShipments.id, 
       DaysShipments.departedAt,
+      DaysShipments.json,
       CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
         'id', daysShipmentsSentOutDockets.id,
         'daysShipmentsId', daysShipmentsSentOutDockets.daysShipmentsId,
