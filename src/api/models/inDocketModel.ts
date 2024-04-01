@@ -12,7 +12,7 @@ import { ResultSetHeader } from 'mysql2';
 
 const getAllInDockets = async (): Promise<InDocket[]> => {
   const [rows] = await promisePool.execute<GetInDocket[]>(
-    `SELECT InDockets.id, InDockets.docketNumber, InDockets.arrivalAt, InDockets.userId, InDockets.filename, vendorId, status, InDockets.createdAt, InDockets.updatedAt,
+    `SELECT InDockets.id, InDockets.docketNumber, InDockets.arrivedAt, InDockets.userId, InDockets.filename, vendorId, status, InDockets.createdAt, InDockets.updatedAt,
     CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
       'id', products.id,
       'name', products.name,
@@ -47,7 +47,7 @@ const getAllInDockets = async (): Promise<InDocket[]> => {
 
 const getInDocket = async (id: string): Promise<InDocket> => {
   const [rows] = await promisePool.execute<GetInDocket[]>(
-    `SELECT InDockets.id, InDockets.docketNumber, InDockets.arrivalAt, InDockets.userId, InDockets.filename, vendorId, status, InDockets.createdAt, InDockets.updatedAt,
+    `SELECT InDockets.id, InDockets.docketNumber, InDockets.arrivedAt, InDockets.userId, InDockets.filename, vendorId, status, InDockets.createdAt, InDockets.updatedAt,
     CONCAT('[', GROUP_CONCAT(JSON_OBJECT(
       'id', products.id,
       'name', products.name,
@@ -83,7 +83,7 @@ const getInDocket = async (id: string): Promise<InDocket> => {
 
 const postInDocket = async (inDocket: PostInDocket) => {
   const sql = promisePool.format(
-    `INSERT INTO InDockets (docketNumber, arrivalAt, userId, vendorId)
+    `INSERT INTO InDockets (docketNumber, arrivedAt, userId, vendorId)
     VALUES (?, ?, ?, ?)`,
     [
       inDocket.docketNumber,
